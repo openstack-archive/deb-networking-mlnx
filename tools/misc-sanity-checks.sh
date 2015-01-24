@@ -16,23 +16,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-TMPDIR=`mktemp -d /tmp/${0##*/}.XXXXXX` || exit 1
-export TMPDIR
+# The purpose of this script is to avoid casual introduction of more
+# bash dependency.  Please consider alternatives before commiting code
+# which uses bash specific features.
+
+export TMPDIR=`/bin/mktemp -d`
 trap "rm -rf $TMPDIR" EXIT
 
 FAILURES=$TMPDIR/failures
 
 
 check_opinionated_shell () {
-    # The purpose of this function is to avoid casual introduction of more
-    # bash dependency.  Please consider alternatives before commiting code
-    # which uses bash specific features.
-
     # Check that shell scripts are not bash opinionated (ignore comments though)
     # If you cannot avoid the use of bash, please change the EXPECTED var below.
-    OBSERVED=$(grep -E '^([[:space:]]*[^#[:space:]]|#!).*bash' \
-               tox.ini tools/* | wc -l)
-    EXPECTED=3
+    OBSERVED=$(grep -E '^([^#]|#!).*bash' tox.ini tools/* | wc -l)
+    EXPECTED=5
     if [ ${EXPECTED} -ne ${OBSERVED} ]; then
         echo "Bash usage has been detected!" >>$FAILURES
     fi
@@ -42,29 +40,15 @@ check_opinionated_shell () {
 check_no_symlinks_allowed () {
     # Symlinks break the package build process, so ensure that they
     # do not slip in, except hidden symlinks.
-    if [ $(find . -type l ! -path '*/.*' | wc -l) -ge 1 ]; then
+    if [ $(find . -type l ! -path '*/\.*' | wc -l) -ge 1 ]; then
         echo "Symlinks are not allowed!" >>$FAILURES
     fi
 }
 
 
-check_pot_files_errors () {
-    # The job neutron-propose-translation-update does not update from
-    # transifex since our po files contain duplicate entries where
-    # obsolete entries duplicate normal entries. Prevent obsolete
-    # entries to slip in
-    find neutron -type f -regex '.*\.pot?' \
-                 -print0|xargs -0 -n 1 msgfmt --check-format \
-                 -o /dev/null
-    if [ "$?" -ne 0 ]; then
-        echo "PO files syntax is not correct!" >>$FAILURES
-    fi
-}
-
 # Add your checks here...
 check_opinionated_shell
 check_no_symlinks_allowed
-check_pot_files_errors
 
 # Fail, if there are emitted failures
 if [ -f $FAILURES ]; then

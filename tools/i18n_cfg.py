@@ -92,6 +92,5 @@ msg_format_checkers = [
 ]
 
 
-file_black_list = ["./neutron/tests/unit",
-                   "./neutron/openstack",
-                   "./neutron/plugins/bigswitch/tests"]
+file_black_list = ["./networking_mlnx/tests/unit",
+                   "./networking_mlnx/openstack"]
