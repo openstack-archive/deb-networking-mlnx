@@ -1,0 +1,85 @@
+#!/bin/bash
+#
+# lib/eswitchd
+# Functions to control the configuration and operation of the eswitchd service
+# <do not include this template file in ``stack.sh``!>
+
+# Dependencies:
+#
+# - ``functions`` file
+# - ``SERVICE_{TENANT_NAME|PASSWORD}`` must be defined
+# - <list other global vars that are assumed to be defined>
+
+# ``stack.sh`` calls the entry points in this order:
+#
+# - is_eswitchd_enabled
+# - install_eswitchd_mlnx
+# - configure_eswitchd_mlnx
+# - init_eswitchd_mlnx
+# - start_eswitchd_mlnx
+# - stop_eswitchd_mlnx
+# - cleanup_eswitchd_mlnx
+
+# Save trace setting
+MY_XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+ESWITCHD_REPO=${ESWITCHD_REPO:-git://github.com/mellanox-openstack/mellanox-eswitchd.git}
+ESWITCHD_BRANCH=${ESWITCHD_BRANCH:-master}
+
+ESWITCHD_DIR=$DEST/eswitchd
+ESWITCHD_BIN_DIR=$(get_python_exec_prefix)
+ESWITCHD_LOG_DIR=/var/log/eswitchd
+ESWITCHD_LOG_FILE=$ESWITCHD_LOG_DIR/eswitchd.log
+ESWITCHD_CONF_DIR=/etc/eswitchd
+ESWITCHD_CONF_FILE=$ESWITCHD_CONF_DIR/eswitchd.conf
+
+function install_eswitchd {
+    install_package python-zmq
+    install_package python-ethtool
+    git_clone $ESWITCHD_REPO $ESWITCHD_DIR $ESWITCHD_BRANCH
+    cd $ESWITCHD_DIR
+    sudo python setup.py install
+}
+
+function configure_eswitchd {
+    # setting up log
+    sudo mkdir -p $ESWITCHD_LOG_DIR
+    sudo chown -R $(whoami) $ESWITCHD_LOG_DIR
+    touch $ESWITCHD_LOG_FILE
+
+    # setting up configuration
+    sudo mkdir -p /$ESWITCHD_CONF_DIR
+    sudo chown -R $(whoami) /$ESWITCHD_CONF_DIR
+    cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* /$ESWITCHD_CONF_DIR
+    sudo cp $ESWITCHD_DIR/etc/sudoers.d/eswitchd /etc/sudoers.d
+    sudo chmod 0440 /etc/sudoers.d/eswitchd
+
+    iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "${PHYSICAL_NETWORK}:${PHYSICAL_INTERFACE}"
+}
+
+function init_eswitchd {
+    :
+}
+
+function start_eswitchd {
+    run_process eswitchd "${ESWITCHD_BIN_DIR}/eswitchd --config-file $ESWITCHD_CONF_FILE"
+}
+
+function stop_eswitchd {
+    stop_process eswitchd
+}
+
+function check_eswitchd {
+    :
+}
+
+function cleanup_eswitch {
+    sudo rm -rf $ESWITCHD_LOG_DIR
+    sudo rm -rf ${ESWITCHD_CONF_DIR}
+    sudo rm -f /etc/sudoers.d/eswitchd
+}
+
+# Restore trace
+$MY_XTRACE
