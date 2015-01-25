@@ -53,7 +53,9 @@ class TestMlnxEswitchRpcCallbacks(base.BaseTestCase):
         agent = mock.Mock()
         self.rpc_callbacks = \
             mlnx_eswitch_neutron_agent.MlnxEswitchRpcCallbacks(
-                'context', agent)
+                'context',
+                agent,
+                agent)
 
     def test_port_update(self):
         port = {'mac_address': '10:20:30:40:50:60'}
@@ -83,7 +85,7 @@ class TestEswitchAgent(base.BaseTestCase):
 
         with mock.patch.object(utils, 'zmq'):
             self.agent = mlnx_eswitch_neutron_agent.MlnxEswitchNeutronAgent(
-                {})
+                {}, {})
         self.agent.plugin_rpc = mock.Mock()
         self.agent.context = mock.Mock()
         self.agent.agent_id = mock.Mock()

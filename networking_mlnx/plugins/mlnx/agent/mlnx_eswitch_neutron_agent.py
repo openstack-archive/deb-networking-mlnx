@@ -148,12 +148,12 @@ class MlnxEswitchRpcCallbacks(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
     #   1.1 Support Security Group RPC
     target = messaging.Target(version='1.1')
 
-    def __init__(self, context, agent):
+    def __init__(self, context, agent, sg_agent):
         super(MlnxEswitchRpcCallbacks, self).__init__()
         self.context = context
         self.agent = agent
         self.eswitch = agent.eswitch
-        self.sg_agent = agent
+        self.sg_agent = sg_agent
 
     def network_delete(self, context, **kwargs):
         LOG.debug("network_delete received")
@@ -171,14 +171,9 @@ class MlnxEswitchRpcCallbacks(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
                   port['mac_address'])
 
 
-class MlnxEswitchPluginApi(agent_rpc.PluginApi,
-                           sg_rpc.SecurityGroupServerRpcApiMixin):
-    pass
+class MlnxEswitchNeutronAgent(object):
 
-
-class MlnxEswitchNeutronAgent(sg_rpc.SecurityGroupAgentRpcMixin):
-
-    def __init__(self, interface_mapping):
+    def __init__(self, interface_mapping, root_helper):
         self._polling_interval = cfg.CONF.AGENT.polling_interval
         self._setup_eswitches(interface_mapping)
         configurations = {'interface_mappings': interface_mapping}
@@ -191,8 +186,12 @@ class MlnxEswitchNeutronAgent(sg_rpc.SecurityGroupAgentRpcMixin):
             'start_flag': True}
         # Stores port update notifications for processing in main rpc loop
         self.updated_ports = set()
+        self.context = context.get_admin_context_without_session()
+        self.plugin_rpc = agent_rpc.PluginApi(topics.PLUGIN)
+        self.sg_plugin_rpc = sg_rpc.SecurityGroupServerRpcApi(topics.PLUGIN)
+        self.sg_agent = sg_rpc.SecurityGroupAgentRpc(self.context,
+                self.sg_plugin_rpc, root_helper)
         self._setup_rpc()
-        self.init_firewall()
 
     def _setup_eswitches(self, interface_mapping):
         daemon = cfg.CONF.ESWITCH.daemon_endpoint
@@ -214,12 +213,11 @@ class MlnxEswitchNeutronAgent(sg_rpc.SecurityGroupAgentRpcMixin):
         LOG.info(_LI("RPC agent_id: %s"), self.agent_id)
 
         self.topic = topics.AGENT
-        self.plugin_rpc = MlnxEswitchPluginApi(topics.PLUGIN)
         self.state_rpc = agent_rpc.PluginReportStateAPI(topics.PLUGIN)
         # RPC network init
-        self.context = context.get_admin_context_without_session()
         # Handle updates from service
-        self.endpoints = [MlnxEswitchRpcCallbacks(self.context, self)]
+        self.endpoints = [MlnxEswitchRpcCallbacks(self.context, self,
+                                                  self.sg_agent)]
         # Define the listening consumers for the agent
         consumers = [[topics.PORT, topics.UPDATE],
                      [topics.NETWORK, topics.DELETE],
