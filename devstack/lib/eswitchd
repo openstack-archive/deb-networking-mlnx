@@ -25,9 +25,6 @@ MY_XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
 
-ESWITCHD_REPO=${ESWITCHD_REPO:-git://github.com/mellanox-openstack/mellanox-eswitchd.git}
-ESWITCHD_BRANCH=${ESWITCHD_BRANCH:-master}
-
 ESWITCHD_DIR=$DEST/eswitchd
 ESWITCHD_BIN_DIR=$(get_python_exec_prefix)
 ESWITCHD_LOG_DIR=/var/log/eswitchd

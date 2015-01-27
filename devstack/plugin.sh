@@ -32,5 +32,5 @@ if [[ "$1" == "clean" ]]; then
     # Remove state and transient data
     # Remember clean.sh first calls unstack.sh
     # no-op
-    :
+    cleanup_neutron_ml2_mlnx
 fi

@@ -38,13 +38,6 @@ source ${DEST}/neutron_ml2_mlnx/devstack/lib/eswitchd
 # Entry Points
 # ------------
 
-# Test if any neutron_ml2_mlnx services are enabled
-# is_neutron_ml2_mlnx_enabled
-function is_neutron_ml2_mlnx_enabled {
-    [[ ,${ENABLED_SERVICES} =~ ,"neutron_ml2_mlnx-" ]] && return 0
-    return 1
-}
-
 # cleanup_neutron_ml2_mlnx() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_neutron_ml2_mlnx {
@@ -76,20 +69,23 @@ function init_neutron_ml2_mlnx {
 # install_neutron_ml2_mlnx() - Collect source and prepare
 function install_neutron_ml2_mlnx {
     install_eswitchd
+    setup_develop $DEST/neutron_ml2_mlnx
 }
 
 # start_neutron_ml2_mlnx() - Start running processes, including screen
 function start_neutron_ml2_mlnx {
     # The quoted command must be a single command and not include an
     # shell metacharacters, redirections or shell builtins.
+    start_eswitchd
     run_process mlnx-agt "$MLNX_AGENT_BINARY --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini"
+    sleep 10
 }
 
 # stop_neutron_ml2_mlnx() - Stop running processes (non-screen)
 function stop_neutron_ml2_mlnx {
     stop_eswitchd
     cleanup_eswitch
-    stop_process mlxn_agent
+    stop_process mlnx-agt
 }
 
 # Restore xtrace
