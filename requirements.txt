@@ -3,7 +3,4 @@
 # process, which may cause wedges in the gate later.
 pbr>=0.6,!=0.7,<1.0
 Babel>=1.3
-#-e git://git.openstack.org/openstack/neutron.git#egg=neutron
-#workaround until the commit https://review.openstack.org/#/c/148614/
-#will merge to neutron
--e git+https://github.com/moshele/neutron.git@thin_mlnx#egg=neutron
+-e git://git.openstack.org/openstack/neutron.git#egg=neutron
