@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo.serialization import jsonutils
-from oslo.utils import importutils
+from oslo_serialization import jsonutils
+from oslo_utils import importutils
 
 from networking_mlnx.plugins.mlnx.agent import comm_utils
 from networking_mlnx.plugins.mlnx.agent import exceptions
