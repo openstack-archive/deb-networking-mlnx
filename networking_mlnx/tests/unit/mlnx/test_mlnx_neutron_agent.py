@@ -85,7 +85,7 @@ class TestEswitchAgent(base.BaseTestCase):
 
         with mock.patch.object(utils, 'zmq'):
             self.agent = mlnx_eswitch_neutron_agent.MlnxEswitchNeutronAgent(
-                {}, {})
+                {})
         self.agent.plugin_rpc = mock.Mock()
         self.agent.context = mock.Mock()
         self.agent.agent_id = mock.Mock()

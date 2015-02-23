@@ -173,7 +173,7 @@ class MlnxEswitchRpcCallbacks(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
 
 class MlnxEswitchNeutronAgent(object):
 
-    def __init__(self, interface_mapping, root_helper):
+    def __init__(self, interface_mapping):
         self._polling_interval = cfg.CONF.AGENT.polling_interval
         self._setup_eswitches(interface_mapping)
         configurations = {'interface_mappings': interface_mapping}
@@ -190,7 +190,7 @@ class MlnxEswitchNeutronAgent(object):
         self.plugin_rpc = agent_rpc.PluginApi(topics.PLUGIN)
         self.sg_plugin_rpc = sg_rpc.SecurityGroupServerRpcApi(topics.PLUGIN)
         self.sg_agent = sg_rpc.SecurityGroupAgentRpc(self.context,
-                self.sg_plugin_rpc, root_helper)
+                self.sg_plugin_rpc)
         self._setup_rpc()
 
     def _setup_eswitches(self, interface_mapping):
