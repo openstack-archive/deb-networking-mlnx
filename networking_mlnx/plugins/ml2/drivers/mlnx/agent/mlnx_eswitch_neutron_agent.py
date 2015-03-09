@@ -24,8 +24,8 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 
-from networking_mlnx.plugins.mlnx.agent import exceptions
-from networking_mlnx.plugins.mlnx.agent import utils
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
 from neutron.agent import rpc as agent_rpc
 from neutron.agent import securitygroups_rpc as sg_rpc
 from neutron.common import constants as q_constants
@@ -34,7 +34,7 @@ from neutron import context
 from neutron.i18n import _LE, _LI, _LW
 from neutron.openstack.common import loopingcall
 from neutron.plugins.common import constants as p_const
-from neutron.plugins.mlnx.agent import config  # noqa
+from neutron.plugins.ml2.drivers.mlnx.agent import config  # noqa
 
 LOG = logging.getLogger(__name__)
 

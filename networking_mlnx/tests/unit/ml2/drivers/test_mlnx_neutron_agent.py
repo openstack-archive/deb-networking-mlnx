@@ -19,9 +19,10 @@ import mock
 from oslo_config import cfg
 import testtools
 
-from networking_mlnx.plugins.mlnx.agent import exceptions
-from networking_mlnx.plugins.mlnx.agent import mlnx_eswitch_neutron_agent
-from networking_mlnx.plugins.mlnx.agent import utils
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import (
+    mlnx_eswitch_neutron_agent)
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
 from neutron.tests import base
 
 
@@ -96,7 +97,7 @@ class TestEswitchAgent(base.BaseTestCase):
         attrs = {'get_devices_details_list.side_effect': Exception()}
         self.agent.plugin_rpc.configure_mock(**attrs)
         with contextlib.nested(
-            mock.patch('networking_mlnx.plugins.mlnx.agent.'
+            mock.patch('networking_mlnx.plugins.ml2.drivers.mlnx.agent.'
                        'mlnx_eswitch_neutron_agent.EswitchManager.'
                        'get_vnics_mac',
                        return_value=[])):
@@ -110,7 +111,7 @@ class TestEswitchAgent(base.BaseTestCase):
         :returns: whether the named function was called
         """
         with contextlib.nested(
-            mock.patch('networking_mlnx.plugins.mlnx.agent.'
+            mock.patch('networking_mlnx.plugins.ml2.drivers.mlnx.agent.'
                        'mlnx_eswitch_neutron_agent.EswitchManager.'
                        'get_vnics_mac',
                        return_value=[]),

@@ -16,9 +16,9 @@
 import mock
 from oslo.config import cfg
 
-from networking_mlnx.plugins.mlnx.agent import comm_utils
-from networking_mlnx.plugins.mlnx.agent import exceptions
-from neutron.plugins.mlnx.agent import config  # noqa
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import comm_utils
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
+from neutron.plugins.ml2.drivers.mlnx.agent import config  # noqa
 from neutron.tests import base
 
 

@@ -18,7 +18,7 @@ import time
 from oslo_config import cfg
 from oslo_log import log as logging
 
-from neutron.plugins.mlnx.agent import config  # noqa
+from neutron.plugins.ml2.drivers.mlnx.agent import config  # noqa
 
 LOG = logging.getLogger(__name__)
 

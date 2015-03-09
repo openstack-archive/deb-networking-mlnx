@@ -3,7 +3,4 @@
 # process, which may cause wedges in the gate later.
 pbr>=0.6,!=0.7,<1.0
 Babel>=1.3
-#-e git://git.openstack.org/openstack/neutron.git#egg=neutron
-#workaround to pass jenkinks test until this https://review.openstack.org/#/c/162693/
-#commit will be in neutron will pass
--e git+https://github.com/moshele/neutron.git@migrate_oslo_log#egg=neutron
+-e git://git.openstack.org/openstack/neutron.git#egg=neutron
