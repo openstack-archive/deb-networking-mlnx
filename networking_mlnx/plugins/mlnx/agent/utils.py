@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 
 from networking_mlnx.plugins.mlnx.agent import comm_utils
 from networking_mlnx.plugins.mlnx.agent import exceptions
 from neutron.i18n import _LE
-from neutron.openstack.common import log as logging
 
 zmq = importutils.try_import('eventlet.green.zmq')
 
