@@ -1,0 +1,5 @@
+networking-mlnx (2015.1~b1+git20150326+ad9f3e2282-1) UNRELEASED; urgency=medium
+
+  * Initial release. (Closes: #XXXXXX)
+
+ -- Thomas Goirand <zigo@debian.org>  Tue, 17 Mar 2015 16:02:15 +0100
