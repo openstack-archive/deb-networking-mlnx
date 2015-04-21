@@ -31,11 +31,12 @@ from neutron.tests.unit import testlib_api
 
 PLUGIN_NAME = 'neutron.plugins.ml2.plugin.Ml2Plugin'
 SEG_ID = 4L
-DEVICE_OWNER_COMPUTE = "compute:None"
+DEVICE_OWNER_COMPUTE = 'compute:None'
+MECHANISM_DRIVER_NAME = 'sdnmechdriver'
 
 
 class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
-    _mechanism_drivers = ['logger', sdn_const.GROUP_OPT]
+    _mechanism_drivers = ['logger', MECHANISM_DRIVER_NAME]
 
     def setUp(self):
         config.cfg.CONF.set_override('url', 'http://127.0.0.1:5001/cloudx_api',
@@ -58,7 +59,7 @@ class SDNMechanismConfigTests(testlib_api.SqlTestCase):
                     username='admin',
                     password='admin'):
         config.cfg.CONF.set_override('mechanism_drivers',
-                                     ['logger', sdn_const.GROUP_OPT],
+                                     ['logger', MECHANISM_DRIVER_NAME],
                                      'ml2')
         config.cfg.CONF.set_override('url', url, sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', username, sdn_const.GROUP_OPT)
@@ -105,7 +106,7 @@ class SDNDriverTestCase(base.BaseTestCase):
     def setUp(self):
         super(SDNDriverTestCase, self).setUp()
         config.cfg.CONF.set_override('mechanism_drivers',
-                                     ['logger', sdn_const.GROUP_OPT], 'ml2')
+                                     ['logger', MECHANISM_DRIVER_NAME], 'ml2')
         config.cfg.CONF.set_override('url', 'http://127.0.0.1:5001/cloudx_api',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
