@@ -53,6 +53,10 @@ function configure_eswitchd {
     sudo cp $ESWITCHD_DIR/etc/sudoers.d/eswitchd /etc/sudoers.d
     sudo chmod 0440 /etc/sudoers.d/eswitchd
 
+    # configure nova rootwarp
+    Q_NOVA_RR_CONF_FILE=$NOVA_CONF_DIR/rootwrap.conf
+    sudo sed -e 's:^exec_dirs=\(.*\)$:exec_dirs=\1,/usr/local/bin:' -i $Q_NOVA_RR_CONF_FILE
+
     iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "${PHYSICAL_NETWORK}:${PHYSICAL_INTERFACE}"
 }
 
