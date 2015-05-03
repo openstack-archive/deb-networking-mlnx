@@ -1,5 +1,8 @@
 #!/usr/bin/make -f
 
+PYTHONS:=$(shell pyversions -vr)
+#PYTHON3S:=$(shell py3versions -vr)
+
 UPSTREAM_GIT := git://github.com/stackforge/networking-mlnx.git
 include /usr/share/openstack-pkg-tools/pkgos.make
 
@@ -7,6 +10,15 @@ export OSLO_PACKAGE_VERSION=$(VERSION)
 
 %:
 	dh $@ --buildsystem=python_distutils --with python2
+
+override_dh_auto_install:
+	set -e ; set -x ; for pyvers in $(PYTHONS); do \
+		python$$pyvers setup.py install --install-layout=deb \
+			--root $(CURDIR)/debian/tmp; \
+	done
+
+override_dh_install:
+	dh_install --fail-missing
 
 override_dh_auto_test:
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))

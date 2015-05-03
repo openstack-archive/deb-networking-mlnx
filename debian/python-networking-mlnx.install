@@ -1,0 +1,2 @@
+/usr/lib/python*
+usr/etc/neutron/plugins/ml2/ml2_conf_sdn.ini	/etc/neutron/plugins/ml2
