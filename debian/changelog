@@ -1,4 +1,4 @@
-networking-mlnx (2015.1~b1+git20150326+ad9f3e2282-1) UNRELEASED; urgency=medium
+networking-mlnx (2015.1~b1+git20150502+400747aa20-1) unstable; urgency=medium
 
   * Initial release. (Closes: #XXXXXX)
 
