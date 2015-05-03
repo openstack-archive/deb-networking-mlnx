@@ -1,3 +1,3 @@
 ESWITCHD_REPO=${ESWITCHD_REPO:-git://github.com/mellanox-openstack/mellanox-eswitchd.git}
 ESWITCHD_BRANCH=${ESWITCHD_BRANCH:-master}
-Q_MLNX_VNIC_TYPE=${Q_MLNX_VNIC_TYP:-hostdev}
+Q_MLNX_VNIC_TYPE=${Q_MLNX_VNIC_TYPE:-hostdev}
