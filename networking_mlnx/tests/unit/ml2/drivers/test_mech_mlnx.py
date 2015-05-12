@@ -22,7 +22,7 @@ from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 
 
 class MlnxMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
-    VIF_TYPE = portbindings.VIF_TYPE_MLNX_DIRECT
+    VIF_TYPE = portbindings.VIF_TYPE_MLNX_HOSTDEV
     CAP_PORT_FILTER = False
     AGENT_TYPE = constants.AGENT_TYPE_MLNX
 
@@ -80,10 +80,6 @@ class MlnxMechanismVnicTypeTestCase(MlnxMechanismBaseTestCase,
     def test_vnic_type_direct(self):
         self._check_vif_type_for_vnic_type(portbindings.VNIC_DIRECT,
                                            portbindings.VIF_TYPE_MLNX_HOSTDEV)
-
-    def test_vnic_type_macvtap(self):
-        self._check_vif_type_for_vnic_type(portbindings.VNIC_MACVTAP,
-                                           portbindings.VIF_TYPE_MLNX_DIRECT)
 
     def test_vnic_type_normal(self):
         self._check_vif_type_for_vnic_type(portbindings.VNIC_NORMAL,

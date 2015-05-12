@@ -55,7 +55,6 @@ function configure_neutron_ml2_mlnx {
     if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then
         iniset /$Q_PLUGIN_CONF_FILE eswitch physical_interface_mappings $PHYSICAL_INTERFACE_MAPPINGS
     fi
-    iniset /$Q_PLUGIN_CONF_FILE eswitch vnic_type $Q_MLNX_VNIC_TYPE
     configure_eswitchd
 }
 
