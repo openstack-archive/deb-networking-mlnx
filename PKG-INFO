@@ -1,0 +1,37 @@
+Metadata-Version: 1.2
+Name: networking-mlnx
+Version: 2015.1.2
+Summary: OpenStack Networking
+Home-page: http://www.openstack.org/
+Author: Mellanox
+Author-email: support@mellanox.com
+License: Apache2
+Description: Welcome!
+========
+
+This is the external, decomposed plugin library for the OpenStack ML2 Mellanox
+MechanismDriver. This is the backend code which handles communication with
+Mellanox Hardware.
+
+External Resources:
+===================
+
+The Launchpad page for stackforge/networking-mlnx:
+   https://launchpad.net/networking-mlnx
+
+File bugs for this project here:
+   https://bugs.launchpad.net/networking-mlnx
+
+The Neutron homepage:
+   http://launchpad.net/neutron
+
+
+Platform: All
+Classifier: Environment :: OpenStack
+Classifier: Intended Audience :: Information Technology
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
