@@ -12,21 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# Config file groups name
-GROUP_OPT = "sdn"
+from neutron.common import exceptions as exc
 
-# RESTful API paths:
-NETWORK_PATH = "Network"
-PORT_PATH = "Port"
 
-# HTTP request methods:
-DELETE = "DELETE"
-POST = "POST"
-PUT = "PUT"
+class SDNConnectionError(exc.NeutronException):
+    message = _("Failed to send request to URL: %(dest_url)s %(msg)s")
 
-# HTTP headers
-LOGIN_HTTP_HEADER = {'content-type': 'application/x-www-form-urlencoded'}
-JSON_HTTP_HEADER = {"Content-Type": "application/json"}
 
-# Port device owner
-PORT_DEVICE_OWNER_COMPUTE = 'compute:'
+class SDNLoginError(exc.NeutronException):
+    message = _("Failed login to URL: %(login_url)s %(msg)s")
