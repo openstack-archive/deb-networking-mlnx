@@ -24,7 +24,8 @@
 4) Add SDN mandatory configurations, for example:
     [[post-config|/etc/neutron/plugins/ml2/ml2_conf.ini]]
     [sdn]
-    url = http://sdn_provider/cloudx_api
+    url = http://<sdn_provider_ip>/openstack_api
+    domain = cloudx
     username = admin
     password = admin
 

@@ -39,7 +39,7 @@ class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
     _mechanism_drivers = ['logger', MECHANISM_DRIVER_NAME]
 
     def setUp(self):
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1:5001/cloudx_api',
+        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo/cloudx',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
@@ -55,7 +55,7 @@ class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
 
 class SDNMechanismConfigTests(testlib_api.SqlTestCase):
 
-    def _set_config(self, url='http://127.0.0.1:5001/cloudx_api',
+    def _set_config(self, url='http://127.0.0.1/neo/cloudx',
                     username='admin',
                     password='admin'):
         config.cfg.CONF.set_override('mechanism_drivers',
@@ -84,13 +84,6 @@ class SDNMechanismConfigTests(testlib_api.SqlTestCase):
         self._test_missing_config(password=None)
 
 
-class AuthMatcher(object):
-
-    def __eq__(self, obj):
-        return (obj.username == config.cfg.CONF.sdn.username and
-                obj.password == config.cfg.CONF.sdn.password)
-
-
 class DataMatcher(object):
 
     def __init__(self, context, object_type):
@@ -107,7 +100,7 @@ class SDNDriverTestCase(base.BaseTestCase):
         super(SDNDriverTestCase, self).setUp()
         config.cfg.CONF.set_override('mechanism_drivers',
                                      ['logger', MECHANISM_DRIVER_NAME], 'ml2')
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1:5001/cloudx_api',
+        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo/cloudx',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
@@ -198,23 +191,22 @@ class SDNDriverTestCase(base.BaseTestCase):
     def _test_no_operation(self, method, context, status_code,
                            *args, **kwargs):
         request_response = self._get_mock_request_response(status_code)
-        with mock.patch('requests.request',
+        with mock.patch('requests.Session.request',
                     return_value=request_response) as mock_method:
             method(context)
             assert not mock_method.called, ('Expected not to be called. '
                                        'Called %d times' % mock_method.calls)
 
-    def _test_single_operation(self, method, context, status_code,
-                               *args, **kwargs):
+    def _test_operation_with(self, method, context, status_code,
+                           *args, **kwargs):
         request_response = self._get_mock_request_response(status_code)
-        with mock.patch('requests.request',
+        with mock.patch('requests.Session.request',
                         return_value=request_response) as mock_method:
-                method(context)
-        mock_method.assert_called_once_with(
-            headers=sdn_const.JSON_HTTP_HEADER,
-            timeout=config.cfg.CONF.sdn.timeout,
-            auth=AuthMatcher(),
-            *args, **kwargs)
+            method(context)
+            mock_method.assert_called_with(
+                    headers=sdn_const.JSON_HTTP_HEADER,
+                    timeout=config.cfg.CONF.sdn.timeout,
+                    *args, **kwargs)
 
     def _test_create_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'create_%s_postcommit' %
@@ -222,8 +214,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         context = self._get_mock_operation_context(object_type)
         url = '%s/%s' % (config.cfg.CONF.sdn.url, object_type)
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
-        self._test_single_operation(method, context, status_code,
-                                    sdn_const.POST, **kwargs)
+        self._test_operation_with(method, context, status_code,
+                           sdn_const.POST, **kwargs)
 
     def _test_update_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'update_%s_postcommit' %
@@ -232,8 +224,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         url = '%s/%s/%s' % (config.cfg.CONF.sdn.url, object_type,
                             context.current['id'])
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
-        self._test_single_operation(method, context, status_code,
-                                    sdn_const.PUT, **kwargs)
+        self._test_operation_with(method, context, status_code,
+                           sdn_const.PUT, **kwargs)
 
     def _test_delete_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'delete_%s_postcommit' %
@@ -242,8 +234,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         url = '%s/%s/%s' % (config.cfg.CONF.sdn.url, object_type,
                             context.current['id'])
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
-        self._test_single_operation(method, context, status_code,
-                                   sdn_const.DELETE, **kwargs)
+        self._test_operation_with(method, context, status_code,
+                           sdn_const.DELETE, **kwargs)
 
     def _test_bind_port(self, status_code, context, assert_called=True):
         method = getattr(self.mech, 'bind_port')
@@ -252,8 +244,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
 
         if assert_called:
-            self._test_single_operation(method, context, status_code,
-                                        sdn_const.POST, **kwargs)
+            self._test_operation_with(method, context, status_code,
+                                    sdn_const.POST, **kwargs)
         else:
             self._test_no_operation(method, context, status_code,
                                     sdn_const.POST, **kwargs)
