@@ -7,7 +7,7 @@
 
 2) In a versions older than Kilo add:
     Q_ML2_PLUGIN_MECHANISM_DRIVERS=mlnx,openvswitch
-    enable_service mlnx-agt eswitchd
+    enable_service mlnx-agt eswitchd mlnx_dnsmasq
 
 ==========================================
  SDN Mechanism Driver Enabling in Devstack
@@ -21,7 +21,8 @@
 3) Add SDN plugin to mechanism drivers plugins list:
     Q_ML2_PLUGIN_MECHANISM_DRIVERS=sdnmechdriver,openvswitch
 
-4) Add SDN mandatory configurations, for example:
+4) Add SDN mandatory configurations, for example::
+
     [[post-config|/etc/neutron/plugins/ml2/ml2_conf.ini]]
     [sdn]
     url = http://<sdn_provider_ip>/openstack_api

@@ -34,6 +34,7 @@ set +o xtrace
 MLNX_AGENT_BINARY="$NEUTRON_BIN_DIR/neutron-mlnx-agent"
 
 source ${DEST}/neutron_ml2_mlnx/devstack/lib/eswitchd
+source ${DEST}/neutron_ml2_mlnx/devstack/lib/mlnx_dnsmasq
 
 # Entry Points
 # ------------
@@ -56,6 +57,7 @@ function configure_neutron_ml2_mlnx {
         iniset /$Q_PLUGIN_CONF_FILE eswitch physical_interface_mappings $PHYSICAL_INTERFACE_MAPPINGS
     fi
     configure_eswitchd
+    configure_mlnx_dnsmasq
 }
 
 # init_neutron_ml2_mlnx() - Initialize databases, etc.
@@ -68,6 +70,7 @@ function init_neutron_ml2_mlnx {
 # install_neutron_ml2_mlnx() - Collect source and prepare
 function install_neutron_ml2_mlnx {
     install_eswitchd
+    install_mlnx_dnsmasq
     setup_develop $DEST/neutron_ml2_mlnx
 }
 
