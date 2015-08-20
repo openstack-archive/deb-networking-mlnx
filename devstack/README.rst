@@ -2,12 +2,22 @@
  MLNX agent enable
 ==================
 
-1) Starting from Kilo add the following line:
-    enable_plugin neutron_ml2_mlnx  git://git.openstack.org/stackforge/networking-mlnx
+1) Download DevStack
 
-2) In a versions older than Kilo add:
+2) Add this as an external repository::
+
+    enable_plugin neutron_ml2_mlnx  git://git.openstack.org/stackforge/networking-mlnx <branch>
+
+3) update Q_ML2_PLUGIN_MECHANISM_DRIVERS with mlnx mech driver::
+
     Q_ML2_PLUGIN_MECHANISM_DRIVERS=mlnx,openvswitch
+
+4) enable switchd mlnx-agt and mlnx_dnsmasq services::
+
     enable_service mlnx-agt eswitchd mlnx_dnsmasq
+
+5) run ``stack.sh``
+
 
 ==========================================
  SDN Mechanism Driver Enabling in Devstack
@@ -16,7 +26,7 @@
 1) Download DevStack
 
 2) Add this external repository:
-    enable_plugin neutron_ml2_mlnx  git://git.openstack.org/stackforge/networking-mlnx
+    enable_plugin neutron_ml2_mlnx  git://git.openstack.org/stackforge/networking-mlnx <branch>
 
 3) Add SDN plugin to mechanism drivers plugins list:
     Q_ML2_PLUGIN_MECHANISM_DRIVERS=sdnmechdriver,openvswitch
