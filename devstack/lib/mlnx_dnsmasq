@@ -21,18 +21,15 @@ MY_XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
 
-MLNX_DNSMASQ_DIR=$DEST/mlnx-dnsmasq
 NEUTRON_DCHP_CONF=/etc/neutron/dhcp_agent.ini
 
 function install_mlnx_dnsmasq {
-    git_clone $MLNX_DNSMASQ_REPO $MLNX_DNSMASQ_DIR $MLNX_DNSMASQ_BRANCH
-    cd  $MLNX_DNSMASQ_DIR
-    sudo python setup.py install
+    :
 }
 
 function configure_mlnx_dnsmasq {
     iniset /$NEUTRON_DCHP_CONF DEFAULT dhcp_broadcast_reply True
-    iniset /$NEUTRON_DCHP_CONF DEFAULT dhcp_driver mlnx_dhcp.MlnxDnsmasq
+    iniset /$NEUTRON_DCHP_CONF DEFAULT dhcp_driver networking_mlnx.dhcp.mlnx_dhcp.MlnxDnsmasq
 }
 
 function init_mlnx_dnsmasq {

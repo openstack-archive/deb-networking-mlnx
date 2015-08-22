@@ -1,4 +1,2 @@
 ESWITCHD_REPO=${ESWITCHD_REPO:-git://github.com/mellanox-openstack/mellanox-eswitchd.git}
 ESWITCHD_BRANCH=${ESWITCHD_BRANCH:-master}
-MLNX_DNSMASQ_REPO=${MLNX_DNSMASQ_REPO:-https://github.com/mellanox-openstack/mlnx-dnsmasq.git}
-MLNX_DNSMASQ_BRANCH=${MLNX_DNSMASQ_BRANCH:-master}

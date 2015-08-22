@@ -70,7 +70,6 @@ function init_neutron_ml2_mlnx {
 # install_neutron_ml2_mlnx() - Collect source and prepare
 function install_neutron_ml2_mlnx {
     install_eswitchd
-    install_mlnx_dnsmasq
     setup_develop $DEST/neutron_ml2_mlnx
 }
 
