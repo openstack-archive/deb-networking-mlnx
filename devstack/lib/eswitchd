@@ -27,31 +27,22 @@ set +o xtrace
 
 ESWITCHD_DIR=$DEST/eswitchd
 ESWITCHD_BIN_DIR=$(get_python_exec_prefix)
-ESWITCHD_LOG_DIR=/var/log/eswitchd
-ESWITCHD_LOG_FILE=$ESWITCHD_LOG_DIR/eswitchd.log
 ESWITCHD_CONF_DIR=/etc/eswitchd
 ESWITCHD_CONF_FILE=$ESWITCHD_CONF_DIR/eswitchd.conf
 
 function install_eswitchd {
-    install_package python-zmq
     install_package python-ethtool
     git_clone $ESWITCHD_REPO $ESWITCHD_DIR $ESWITCHD_BRANCH
-    cd $ESWITCHD_DIR
-    sudo python setup.py install
+    setup_develop $ESWITCHD_DIR
+
 }
 
 function configure_eswitchd {
-    # setting up log
-    sudo mkdir -p $ESWITCHD_LOG_DIR
-    sudo chown -R $(whoami) $ESWITCHD_LOG_DIR
-    touch $ESWITCHD_LOG_FILE
 
     # setting up configuration
-    sudo mkdir -p /$ESWITCHD_CONF_DIR
-    sudo chown -R $(whoami) /$ESWITCHD_CONF_DIR
-    cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* /$ESWITCHD_CONF_DIR
-    sudo cp $ESWITCHD_DIR/etc/sudoers.d/eswitchd /etc/sudoers.d
-    sudo chmod 0440 /etc/sudoers.d/eswitchd
+    sudo install -d -o $STACK_USER -m 755 $ESWITCHD_CONF_DIR
+    cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* $ESWITCHD_CONF_DIR
+    configure_rootwrap eswitchd
 
     # configure nova rootwarp
     Q_NOVA_RR_CONF_FILE=$NOVA_CONF_DIR/rootwrap.conf
@@ -77,9 +68,7 @@ function check_eswitchd {
 }
 
 function cleanup_eswitch {
-    sudo rm -rf $ESWITCHD_LOG_DIR
     sudo rm -rf ${ESWITCHD_CONF_DIR}
-    sudo rm -f /etc/sudoers.d/eswitchd
 }
 
 # Restore trace
