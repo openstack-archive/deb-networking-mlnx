@@ -33,6 +33,7 @@ from neutron import context
 from neutron.i18n import _LE, _LI, _LW
 from neutron.plugins.common import constants as p_const
 from neutron.plugins.ml2.drivers.mlnx.agent import config  # noqa
+from neutron.plugins.ml2.drivers.mlnx import mech_mlnx
 
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
@@ -184,7 +185,7 @@ class MlnxEswitchNeutronAgent(object):
             'host': cfg.CONF.host,
             'topic': q_constants.L2_AGENT_TOPIC,
             'configurations': configurations,
-            'agent_type': q_constants.AGENT_TYPE_MLNX,
+            'agent_type': mech_mlnx.AGENT_TYPE_MLNX,
             'start_flag': True}
         # Stores port update notifications for processing in main rpc loop
         self.updated_ports = set()

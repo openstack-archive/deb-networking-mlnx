@@ -13,8 +13,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-from neutron.common import constants
 from neutron.extensions import portbindings
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers.mlnx import mech_mlnx
@@ -22,9 +20,9 @@ from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
 
 
 class MlnxMechanismBaseTestCase(base.AgentMechanismBaseTestCase):
-    VIF_TYPE = portbindings.VIF_TYPE_IB_HOSTDEV
+    VIF_TYPE = mech_mlnx.VIF_TYPE_IB_HOSTDEV
     CAP_PORT_FILTER = False
-    AGENT_TYPE = constants.AGENT_TYPE_MLNX
+    AGENT_TYPE = mech_mlnx.AGENT_TYPE_MLNX
     VNIC_TYPE = portbindings.VNIC_DIRECT
 
     GOOD_MAPPINGS = {'fake_physical_network': 'fake_bridge'}
