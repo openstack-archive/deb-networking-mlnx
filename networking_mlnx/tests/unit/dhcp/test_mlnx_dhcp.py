@@ -242,3 +242,20 @@ class TestMlnxDnsmasq(test_dhcp.TestDnsmasq):
 
     def test_release_unused_leases_one_lease(self):
         pass
+
+    def test_host_file_on_net_with_v6_slaac_and_v4(self):
+        exp_host_name = '/dhcp/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee/host'
+        exp_host_data = (
+            '00:00:80:aa:bb:cc,id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:'
+            '00:80:00:00:aa:bb:cc,host-192-168-0-2.openstacklocal.,'
+            '192.168.0.2,set:eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee\n'
+            '00:16:3E:C2:77:1D,id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:'
+            '16:3E:00:00:C2:77:1D,host-192-168-0-4.openstacklocal.,'
+            '192.168.0.4,set:gggggggg-gggg-gggg-gggg-gggggggggggg\n'
+            '00:00:0f:rr:rr:rr,id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:00:'
+            '0f:00:00:rr:rr:rr,host-192-168-0-1.openstacklocal.,192.168.0.1,'
+            'set:rrrrrrrr-rrrr-rrrr-rrrr-rrrrrrrrrrrr\n').lstrip()
+        dm = self._get_dnsmasq(
+            test_dhcp.FakeDualStackNetworkingSingleDHCPTags())
+        dm._output_hosts_file()
+        self.safe.assert_has_calls([mock.call(exp_host_name, exp_host_data)])
