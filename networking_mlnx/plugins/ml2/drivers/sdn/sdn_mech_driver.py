@@ -18,13 +18,13 @@ import functools
 import requests
 import time
 
+from neutron.i18n import _LE
+from neutron.objects.qos import policy as policy_object
+from neutron.plugins.common import constants
+from neutron.plugins.ml2 import driver_api as api
 from oslo_config import cfg
 from oslo_log import log
 from oslo_serialization import jsonutils
-
-from neutron.i18n import _LE
-from neutron.plugins.common import constants
-from neutron.plugins.ml2 import driver_api as api
 
 LOG = log.getLogger(__name__)
 
@@ -54,6 +54,7 @@ sdn_opts = [
 ]
 
 cfg.CONF.register_opts(sdn_opts, sdn_const.GROUP_OPT)
+NETWORK_QOS_POLICY = 'network_qos_policy'
 
 
 def context_validator(context_type=None):
@@ -146,32 +147,42 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def create_network_postcommit(self, context):
         network_dic = context._network
+        network_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, network_dic['id']))
         self._send_json_http_request(method=sdn_const.POST,
-                                urlpath=sdn_const.NETWORK_PATH,
-                               data=network_dic)
+                                     urlpath=sdn_const.NETWORK_PATH,
+                                     data=network_dic)
 
     @context_validator(sdn_const.NETWORK_PATH)
     @error_handler
     def update_network_postcommit(self, context):
         network_dic = context._network
+        network_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, network_dic['id']))
         urlpath = self._strings_to_url(sdn_const.NETWORK_PATH,
                                        network_dic['id'])
-        self._send_json_http_request(method=sdn_const.PUT, urlpath=urlpath,
-                               data=network_dic)
+        self._send_json_http_request(method=sdn_const.PUT,
+                                     urlpath=urlpath,
+                                     data=network_dic)
 
     @context_validator(sdn_const.NETWORK_PATH)
     @error_handler
     def delete_network_postcommit(self, context):
         network_dic = context._network
+        network_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, network_dic['id']))
         urlpath = self._strings_to_url(sdn_const.NETWORK_PATH,
                                        network_dic['id'])
-        self._send_json_http_request(method=sdn_const.DELETE, urlpath=urlpath,
-                               data=network_dic)
+        self._send_json_http_request(method=sdn_const.DELETE,
+                                     urlpath=urlpath,
+                                     data=network_dic)
 
     @context_validator(sdn_const.PORT_PATH)
     @error_handler
     def update_port_postcommit(self, context):
         port_dic = context._port
+        port_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, port_dic['network_id']))
         urlpath_port = self._strings_to_url(sdn_const.PORT_PATH,
                                             port_dic['id'])
         self._send_json_http_request(method=sdn_const.PUT,
@@ -182,6 +193,8 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def delete_port_postcommit(self, context):
         port_dic = context._port
+        port_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, port_dic['network_id']))
         urlpath_port = self._strings_to_url(sdn_const.PORT_PATH,
                                             port_dic['id'])
         self._send_json_http_request(method=sdn_const.DELETE,
@@ -193,6 +206,8 @@ class SDNMechanismDriver(api.MechanismDriver):
     def bind_port(self, context):
         port_dic = context._port
         if self._is_bind_port_in_compute(port_dic):
+            port_dic[NETWORK_QOS_POLICY] = (
+                self._get_network_qos_policy(context, port_dic['network_id']))
             self._send_json_http_request(method=sdn_const.POST,
                                          urlpath=sdn_const.PORT_PATH,
                                          data=port_dic)
@@ -247,3 +262,7 @@ class SDNMechanismDriver(api.MechanismDriver):
             r.raise_for_status()
         except Exception as e:
             raise sdn_exc.SDNConnectionError(dest_url=dest_url, msg=e)
+
+    def _get_network_qos_policy(self, context, net_id):
+        return policy_object.QosPolicy.get_network_policy(
+            context._plugin_context, net_id)
