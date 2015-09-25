@@ -369,6 +369,7 @@ class MlnxEswitchNeutronAgent(object):
             except exceptions.RequestTimeout:
                 LOG.exception(_LE("Request timeout in agent event loop "
                                   "eSwitchD is not responding - exiting..."))
+                sync = True
                 continue
             if sync:
                 LOG.info(_LI("Agent out of sync with plugin!"))
