@@ -93,6 +93,9 @@ class DataMatcher(object):
     def __eq__(self, data):
         return data == self._data
 
+    def __repr__(self):
+        return self._data
+
 
 class SDNDriverTestCase(base.BaseTestCase):
 
@@ -117,7 +120,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         current = {"provider:segmentation_id": SEG_ID,
                    'id': 'd897e21a-dfd6-4331-a5dd-7524fa421c3e',
                    'name': 'net1',
-                   'provider:network_type': 'vlan'}
+                   'provider:network_type': 'vlan',
+                   'network_qos_policy': None}
         context = mock.Mock(current=current, _network=current,
                             _segments=self._get_segments_list())
         return context
@@ -131,7 +135,8 @@ class SDNDriverTestCase(base.BaseTestCase):
                    'binding:vnic_type': 'direct',
                    'mac_address': '12:34:56:78:21:b6',
                    'name': 'port_test1',
-                   'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701'}
+                   'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
+                   'network_qos_policy': None}
 
         # The port context should have NetwrokContext object that contain
         # the segments list
@@ -144,7 +149,9 @@ class SDNDriverTestCase(base.BaseTestCase):
 
     def _get_mock_bind_operation_context(self,
                                          device_owner=DEVICE_OWNER_COMPUTE):
-        current = {'device_owner': device_owner}
+        current = {'device_owner': device_owner,
+                   'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
+                   'network_qos_policy': None}
         context = mock.Mock(current=current, _port=current,
                             segments_to_bind=self._get_segments_list())
         return context
@@ -250,37 +257,49 @@ class SDNDriverTestCase(base.BaseTestCase):
             self._test_no_operation(method, context, status_code,
                                     sdn_const.POST, **kwargs)
 
-    def test_create_network_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_create_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_create_resource_postcommit(sdn_const.NETWORK_PATH,
                                                   status_code,
                                                   )
 
-    def test_update_port_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_update_port_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_update_resource_postcommit(sdn_const.PORT_PATH,
                                                   status_code,
                                                   )
 
-    def test_update_network_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_update_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_update_resource_postcommit(sdn_const.NETWORK_PATH,
                                                   status_code,
                                                   )
 
-    def test_delete_network_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_delete_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_delete_resource_postcommit(sdn_const.NETWORK_PATH,
                                                   status_code,
                                                   )
 
-    def test_delete_port_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_delete_port_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_delete_resource_postcommit(sdn_const.PORT_PATH,
                                                   status_code,
                                                   )
 
-    def test_bind_port_compute(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_bind_port_compute(self, *args):
         """Bind port to VM
 
         SDN MD will call this kind of bind only
@@ -294,7 +313,7 @@ class SDNDriverTestCase(base.BaseTestCase):
     def test_bind_port_network(self):
         """Bind port network context
 
-        bind network port can be occuer when a port binded to a dhcp
+        bind network port occurs when a port binded to a dhcp
         SDN MD will filter such a calls
         """
         context = self._get_mock_bind_operation_context(
