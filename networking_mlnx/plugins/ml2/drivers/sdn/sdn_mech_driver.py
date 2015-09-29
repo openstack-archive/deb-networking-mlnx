@@ -120,6 +120,7 @@ class SDNMechanismDriver(api.MechanismDriver):
                          {'url': login_url})
                 r = session.request(sdn_const.POST, login_url, data=login_data,
                                     headers=login_headers)
+                LOG.debug("request status: %d", r.status_code)
                 r.raise_for_status()
             except Exception as e:
                 raise sdn_exc.SDNLoginError(login_url=login_url, msg=e)
@@ -259,6 +260,7 @@ class SDNMechanismDriver(api.MechanismDriver):
             r = session.request(method, url=dest_url,
                                 headers=sdn_const.JSON_HTTP_HEADER,
                                 data=data, timeout=self.timeout)
+            LOG.debug("request status: %d", r.status_code)
             r.raise_for_status()
         except Exception as e:
             raise sdn_exc.SDNConnectionError(dest_url=dest_url, msg=e)
