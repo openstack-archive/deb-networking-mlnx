@@ -41,7 +41,7 @@ function configure_eswitchd {
 
     # setting up configuration
     sudo install -d -o $STACK_USER -m 755 $ESWITCHD_CONF_DIR
-    cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* $ESWITCHD_CONF_DIR
+    sudo cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* $ESWITCHD_CONF_DIR
     configure_rootwrap eswitchd
 
     # configure nova rootwarp
