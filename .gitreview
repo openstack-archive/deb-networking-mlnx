@@ -1,4 +1,4 @@
 [gerrit]
 host=review.openstack.org
 port=29418
-project=stackforge/networking-mlnx.git
+project=openstack/networking-mlnx.git
