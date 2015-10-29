@@ -15,6 +15,7 @@
 
 
 import socket
+import sys
 import time
 
 import eventlet
@@ -27,17 +28,18 @@ from oslo_service import loopingcall
 
 from neutron.agent import rpc as agent_rpc
 from neutron.agent import securitygroups_rpc as sg_rpc
+from neutron.common import config as common_config
 from neutron.common import constants as q_constants
 from neutron.common import topics
+from neutron.common import utils as q_utils
 from neutron import context
 from neutron.i18n import _LE, _LI, _LW
 from neutron.plugins.common import constants as p_const
-from neutron.plugins.ml2.drivers.mlnx.agent import config  # noqa
-from neutron.plugins.ml2.drivers.mlnx import mech_mlnx
 
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import config  # noqa
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
-
+from networking_mlnx.plugins.ml2.drivers.mlnx import mech_mlnx
 
 LOG = logging.getLogger(__name__)
 
@@ -390,3 +392,28 @@ class MlnxEswitchNeutronAgent(object):
                           "(%(polling_interval)s vs. %(elapsed)s)",
                           {'polling_interval': self._polling_interval,
                            'elapsed': elapsed})
+
+
+def main():
+    common_config.init(sys.argv[1:])
+    common_config.setup_logging()
+
+    try:
+        interface_mappings = q_utils.parse_mappings(
+            cfg.CONF.ESWITCH.physical_interface_mappings)
+    except ValueError as e:
+        LOG.error(_LE("Parsing physical_interface_mappings failed: %s. "
+                      "Agent terminated!"), e)
+        sys.exit(1)
+    LOG.info(_LI("Interface mappings: %s"), interface_mappings)
+
+    try:
+        agent = MlnxEswitchNeutronAgent(interface_mappings)
+    except Exception:
+        LOG.exception(_LE("Failed on Agent initialisation: Agent terminated!"))
+        sys.exit(1)
+
+    # Start everything.
+    LOG.info(_LI("Agent initialised successfully, now running... "))
+    agent.run()
+    sys.exit(0)
