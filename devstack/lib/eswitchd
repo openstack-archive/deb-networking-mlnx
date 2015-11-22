@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 #
 # lib/eswitchd
 # Functions to control the configuration and operation of the eswitchd service
@@ -25,24 +25,62 @@ MY_XTRACE=$(set +o | grep xtrace)
 set +o xtrace
 
 
-ESWITCHD_DIR=$DEST/eswitchd
+ESWITCHD_DIR=$DEST/neutron_ml2_mlnx
 ESWITCHD_BIN_DIR=$(get_python_exec_prefix)
-ESWITCHD_CONF_DIR=/etc/eswitchd
+ESWITCHD_CONF_DIR=/etc/neutron/plugins/ml2
 ESWITCHD_CONF_FILE=$ESWITCHD_CONF_DIR/eswitchd.conf
 
 function install_eswitchd {
     install_package python-ethtool
-    git_clone $ESWITCHD_REPO $ESWITCHD_DIR $ESWITCHD_BRANCH
-    setup_develop $ESWITCHD_DIR
+}
+
+function configure_rootwrap_eswitchd {
+    local project="neutron"
+    local project_uc
+    project_uc=$(echo $project|tr a-z A-Z)
+    local bin_dir="${project_uc}_BIN_DIR"
+    bin_dir="${!bin_dir}"
+    local project_dir="${project_uc}_DIR"
+    project_dir="${!project_dir}"
+
+    local rootwrap_conf_src_dir="$ESWITCHD_DIR/etc/neutron"
+    local rootwrap_bin="${bin_dir}/eswitchd-rootwrap"
+
+    # Start fresh with rootwrap filters
+    sudo install -d -o root -g root -m 755 /etc/${project}/rootwrap.d
+    sudo install -o root -g root -m 644 $rootwrap_conf_src_dir/rootwrap.d/*.filters /etc/${project}/rootwrap.d
+
+    # Set up eswitchd-rootwrap.conf, pointing to /etc/*/rootwrap.d
+    sudo install -o root -g root -m 644 $rootwrap_conf_src_dir/eswitchd-rootwrap.conf /etc/${project}/eswitchd-rootwrap.conf
+    sudo sed -e "s:^filters_path=.*$:filters_path=/etc/${project}/rootwrap.d:" -i /etc/${project}/eswitchd-rootwrap.conf
+
+    # Set up the rootwrap sudoers
+    local tempfile
+    tempfile=$(mktemp)
+    # Specify eswitchd-rootwrap.conf as first parameter to rootwrap
+    rootwrap_sudo_cmd="${rootwrap_bin} /etc/${project}/eswitchd-rootwrap.conf *"
+    echo "$STACK_USER ALL=(root) NOPASSWD: $rootwrap_sudo_cmd" >$tempfile
+    if [ -f ${bin_dir}/${project}-rootwrap-daemon ]; then
+        # rootwrap daemon does not need any parameters
+        rootwrap_sudo_cmd="${rootwrap_bin}-daemon /etc/${project}/eswitchd-rootwrap.conf"
+        echo "$STACK_USER ALL=(root) NOPASSWD: $rootwrap_sudo_cmd" >>$tempfile
+    fi
+    chmod 0440 $tempfile
+    sudo chown root:root $tempfile
+    sudo mv $tempfile /etc/sudoers.d/eswitchd-rootwrap
+
+    # Add bin dir to sudo's secure_path because rootwrap is being called
+    # without a path because BROKEN.
+    add_sudo_secure_path $(dirname $rootwrap_bin)
 
 }
 
-function configure_eswitchd {
 
+function configure_eswitchd {
     # setting up configuration
     sudo install -d -o $STACK_USER -m 755 $ESWITCHD_CONF_DIR
     sudo cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* $ESWITCHD_CONF_DIR
-    configure_rootwrap eswitchd
+    configure_rootwrap_eswitchd eswitchd
 
     # configure nova rootwarp
     Q_NOVA_RR_CONF_FILE=$NOVA_CONF_DIR/rootwrap.conf
