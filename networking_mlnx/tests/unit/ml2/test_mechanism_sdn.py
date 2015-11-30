@@ -13,21 +13,20 @@
 #    under the License.
 
 import mock
-from oslo_serialization import jsonutils
 import requests
 
-from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
-from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 from neutron.common import constants as neutron_const
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import config as config
 from neutron.plugins.ml2 import driver_api as api
-
 from neutron.plugins.ml2 import plugin
 from neutron.tests import base
 from neutron.tests.unit.plugins.ml2 import test_plugin
 from neutron.tests.unit import testlib_api
+from oslo_serialization import jsonutils
 
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
+from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 
 PLUGIN_NAME = 'neutron.plugins.ml2.plugin.Ml2Plugin'
 SEG_ID = 4L
@@ -310,14 +309,29 @@ class SDNDriverTestCase(base.BaseTestCase):
         for status_code in self._get_http_request_codes():
             self._test_bind_port(status_code, context)
 
-    def test_bind_port_network(self):
-        """Bind port network context
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_bind_port_dhcp(self, *args):
+        """Bind port dhcp context
 
         bind network port occurs when a port binded to a dhcp
         SDN MD will filter such a calls
         """
         context = self._get_mock_bind_operation_context(
                                         neutron_const.DEVICE_OWNER_DHCP)
+        for status_code in self._get_http_request_codes():
+            self._test_bind_port(status_code, context)
+
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_bind_port_router(self, *args):
+        """Bind port router context
+
+        bind network port occurs when a port binded to a router
+        SDN MD will filter such a calls
+        """
+        context = self._get_mock_bind_operation_context(
+                                        neutron_const.DEVICE_OWNER_ROUTER_GW)
         for status_code in self._get_http_request_codes():
             self._test_bind_port(status_code, context, assert_called=False)
 
