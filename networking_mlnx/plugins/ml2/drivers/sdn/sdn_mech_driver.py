@@ -11,13 +11,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-import constants as sdn_const
-import exceptions as sdn_exc
 import functools
 import requests
 import time
 
+from neutron.common import constants as neutron_const
 from neutron.i18n import _LE
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
@@ -25,6 +23,9 @@ from neutron.plugins.ml2 import driver_api as api
 from oslo_config import cfg
 from oslo_log import log
 from oslo_serialization import jsonutils
+
+import networking_mlnx.plugins.ml2.drivers.sdn.constants as sdn_const
+import networking_mlnx.plugins.ml2.drivers.sdn.exceptions as sdn_exc
 
 LOG = log.getLogger(__name__)
 
@@ -206,23 +207,24 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def bind_port(self, context):
         port_dic = context._port
-        if self._is_bind_port_in_compute(port_dic):
+        if self._is_send_bind_port(port_dic):
             port_dic[NETWORK_QOS_POLICY] = (
                 self._get_network_qos_policy(context, port_dic['network_id']))
             self._send_json_http_request(method=sdn_const.POST,
                                          urlpath=sdn_const.PORT_PATH,
                                          data=port_dic)
 
-    def _is_bind_port_in_compute(self, port_context):
+    def _is_send_bind_port(self, port_context):
         """Verify that bind port is occur in compute context
 
-        The request HTTP will occur only when bind port is in a compute context
-        The bind port can occur for example in network
+        The request HTTP will occur only when the device owner is compute
+        or dhcp.
         """
         device_owner = port_context['device_owner']
         return (device_owner and
-                device_owner.lower().startswith(
-                                        sdn_const.PORT_DEVICE_OWNER_COMPUTE))
+                (device_owner.lower().startswith(
+                 sdn_const.PORT_DEVICE_OWNER_COMPUTE) or
+                 device_owner == neutron_const.DEVICE_OWNER_DHCP))
 
     def check_segment(self, segment):
         """Verify if a segment is valid for the SDN MechanismDriver.
