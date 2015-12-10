@@ -76,7 +76,11 @@ class ConnUtil(object):
                           'vnic_type': vnic_type,
                           'dev_name': dev_name})
         recv_msg = self.send_msg(msg)
-        dev = recv_msg['dev']
+        try:
+            dev = recv_msg['dev']
+        except Exception:
+            error_msg = "Failed to allocate %s on %s" % (vnic_mac, fabric)
+            raise exceptions.MlxException(error_msg)
         return dev
 
     def plug_nic(self, vnic_mac, device_id, fabric, vif_type, dev_name):
@@ -88,7 +92,11 @@ class ConnUtil(object):
                           'dev_name': dev_name})
 
         recv_msg = self.send_msg(msg)
-        dev = recv_msg['dev']
+        try:
+            dev = recv_msg['dev']
+        except Exception:
+            error_msg = "Failed to plug_nic %s on %s" % (vnic_mac, fabric)
+            raise exceptions.MlxException(error_msg)
         return dev
 
     def deallocate_nic(self, vnic_mac, fabric):
@@ -96,7 +104,11 @@ class ConnUtil(object):
                           'fabric': fabric,
                           'vnic_mac': vnic_mac})
         recv_msg = self.send_msg(msg)
-        dev = recv_msg['dev']
+        try:
+            dev = recv_msg['dev']
+        except Exception:
+            error_msg = "Failed to deallocate %s on %s" % (vnic_mac, fabric)
+            raise exceptions.MlxException(error_msg)
         return dev
 
     def get_tables(self, fabric):
