@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: networking-mlnx
-Version: 2015.2.1
+Version: 7.0.0
 Summary: OpenStack Networking
 Home-page: http://www.openstack.org/
 Author: Mellanox
