@@ -1,2 +1,2 @@
-ESWITCHD_REPO=${ESWITCHD_REPO:-git://github.com/mellanox-openstack/mellanox-eswitchd.git}
+ESWITCHD_REPO=${ESWITCHD_REPO:-git://github.com/Mellanox/eswitchd.git}
 ESWITCHD_BRANCH=${ESWITCHD_BRANCH:-master}
