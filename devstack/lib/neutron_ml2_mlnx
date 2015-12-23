@@ -34,6 +34,7 @@ set +o xtrace
 MLNX_AGENT_BINARY="$NEUTRON_BIN_DIR/neutron-mlnx-agent"
 
 source ${DEST}/neutron_ml2_mlnx/devstack/lib/eswitchd
+source ${DEST}/neutron_ml2_mlnx/devstack/lib/mlnx_dnsmasq
 
 # Entry Points
 # ------------
@@ -49,14 +50,21 @@ function cleanup_neutron_ml2_mlnx {
 
 # configure_neutron_ml2_mlnx() - Set config files, create data dirs, etc
 function configure_neutron_ml2_mlnx {
-    if [[ -z "$PHYSICAL_INTERFACE_MAPPINGS" ]] && [[ -n "$PHYSICAL_NETWORK" ]] && [[ -n "$PHYSICAL_INTERFACE" ]]; then
-        PHYSICAL_INTERFACE_MAPPINGS=$PHYSICAL_NETWORK:$PHYSICAL_INTERFACE
+    if is_service_enabled mlnx-agt; then
+        if [[ -z "$PHYSICAL_INTERFACE_MAPPINGS" ]] && [[ -n "$PHYSICAL_NETWORK" ]] && [[ -n "$PHYSICAL_INTERFACE" ]]; then
+            PHYSICAL_INTERFACE_MAPPINGS=$PHYSICAL_NETWORK:$PHYSICAL_INTERFACE
+        fi
+        if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then
+            iniset /$Q_PLUGIN_CONF_FILE eswitch physical_interface_mappings $PHYSICAL_INTERFACE_MAPPINGS
+        fi
+        iniset /$Q_PLUGIN_CONF_FILE securitygroup firewall_driver neutron.agent.firewall.NoopFirewallDriver
     fi
-    if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then
-        iniset /$Q_PLUGIN_CONF_FILE eswitch physical_interface_mappings $PHYSICAL_INTERFACE_MAPPINGS
+    if is_service_enabled eswitchd; then
+        configure_eswitchd
     fi
-    iniset /$Q_PLUGIN_CONF_FILE eswitch vnic_type $Q_MLNX_VNIC_TYPE
-    configure_eswitchd
+    if is_service_enabled mlnx_dnsmasq; then
+        configure_mlnx_dnsmasq
+    fi
 }
 
 # init_neutron_ml2_mlnx() - Initialize databases, etc.
@@ -68,7 +76,9 @@ function init_neutron_ml2_mlnx {
 
 # install_neutron_ml2_mlnx() - Collect source and prepare
 function install_neutron_ml2_mlnx {
-    install_eswitchd
+    if is_service_enabled eswitchd; then
+        install_eswitchd
+    fi
     setup_develop $DEST/neutron_ml2_mlnx
 }
 
@@ -76,16 +86,24 @@ function install_neutron_ml2_mlnx {
 function start_neutron_ml2_mlnx {
     # The quoted command must be a single command and not include an
     # shell metacharacters, redirections or shell builtins.
-    start_eswitchd
-    run_process mlnx-agt "$MLNX_AGENT_BINARY --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini"
+    if is_service_enabled eswitchd; then
+        start_eswitchd
+    fi
+    if is_service_enabled mlnx-agt; then
+        run_process mlnx-agt "$MLNX_AGENT_BINARY --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini"
+    fi
     sleep 10
 }
 
 # stop_neutron_ml2_mlnx() - Stop running processes (non-screen)
 function stop_neutron_ml2_mlnx {
-    stop_eswitchd
-    cleanup_eswitch
-    stop_process mlnx-agt
+    if is_service_enabled eswitchd; then
+        stop_eswitchd
+        cleanup_eswitch
+    fi
+    if is_service_enabled mlnx-agt; then
+        stop_process mlnx-agt
+    fi
 }
 
 # Restore xtrace

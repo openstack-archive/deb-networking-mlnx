@@ -23,18 +23,21 @@ eventlet.monkey_patch()
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_service import loopingcall
 
-from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
-from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
 from neutron.agent import rpc as agent_rpc
 from neutron.agent import securitygroups_rpc as sg_rpc
 from neutron.common import constants as q_constants
 from neutron.common import topics
 from neutron import context
 from neutron.i18n import _LE, _LI, _LW
-from neutron.openstack.common import loopingcall
 from neutron.plugins.common import constants as p_const
 from neutron.plugins.ml2.drivers.mlnx.agent import config  # noqa
+from neutron.plugins.ml2.drivers.mlnx import mech_mlnx
+
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
+from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
+
 
 LOG = logging.getLogger(__name__)
 
@@ -182,7 +185,7 @@ class MlnxEswitchNeutronAgent(object):
             'host': cfg.CONF.host,
             'topic': q_constants.L2_AGENT_TOPIC,
             'configurations': configurations,
-            'agent_type': q_constants.AGENT_TYPE_MLNX,
+            'agent_type': mech_mlnx.AGENT_TYPE_MLNX,
             'start_flag': True}
         # Stores port update notifications for processing in main rpc loop
         self.updated_ports = set()
@@ -366,7 +369,8 @@ class MlnxEswitchNeutronAgent(object):
             except exceptions.RequestTimeout:
                 LOG.exception(_LE("Request timeout in agent event loop "
                                   "eSwitchD is not responding - exiting..."))
-                raise SystemExit(1)
+                sync = True
+                continue
             if sync:
                 LOG.info(_LI("Agent out of sync with plugin!"))
                 sync = False

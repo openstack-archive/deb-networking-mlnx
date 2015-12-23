@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import mock
-from oslo.config import cfg
+from oslo_config import cfg
 
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import comm_utils
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions

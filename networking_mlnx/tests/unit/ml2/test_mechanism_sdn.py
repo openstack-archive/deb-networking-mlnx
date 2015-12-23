@@ -13,21 +13,20 @@
 #    under the License.
 
 import mock
-from oslo_serialization import jsonutils
 import requests
 
-from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
-from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 from neutron.common import constants as neutron_const
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import config as config
 from neutron.plugins.ml2 import driver_api as api
-
 from neutron.plugins.ml2 import plugin
 from neutron.tests import base
 from neutron.tests.unit.plugins.ml2 import test_plugin
 from neutron.tests.unit import testlib_api
+from oslo_serialization import jsonutils
 
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
+from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 
 PLUGIN_NAME = 'neutron.plugins.ml2.plugin.Ml2Plugin'
 SEG_ID = 4L
@@ -39,7 +38,7 @@ class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
     _mechanism_drivers = ['logger', MECHANISM_DRIVER_NAME]
 
     def setUp(self):
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1:5001/cloudx_api',
+        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo/cloudx',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
@@ -55,7 +54,7 @@ class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
 
 class SDNMechanismConfigTests(testlib_api.SqlTestCase):
 
-    def _set_config(self, url='http://127.0.0.1:5001/cloudx_api',
+    def _set_config(self, url='http://127.0.0.1/neo/cloudx',
                     username='admin',
                     password='admin'):
         config.cfg.CONF.set_override('mechanism_drivers',
@@ -84,13 +83,6 @@ class SDNMechanismConfigTests(testlib_api.SqlTestCase):
         self._test_missing_config(password=None)
 
 
-class AuthMatcher(object):
-
-    def __eq__(self, obj):
-        return (obj.username == config.cfg.CONF.sdn.username and
-                obj.password == config.cfg.CONF.sdn.password)
-
-
 class DataMatcher(object):
 
     def __init__(self, context, object_type):
@@ -100,6 +92,9 @@ class DataMatcher(object):
     def __eq__(self, data):
         return data == self._data
 
+    def __repr__(self):
+        return self._data
+
 
 class SDNDriverTestCase(base.BaseTestCase):
 
@@ -107,7 +102,7 @@ class SDNDriverTestCase(base.BaseTestCase):
         super(SDNDriverTestCase, self).setUp()
         config.cfg.CONF.set_override('mechanism_drivers',
                                      ['logger', MECHANISM_DRIVER_NAME], 'ml2')
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1:5001/cloudx_api',
+        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo/cloudx',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
@@ -124,7 +119,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         current = {"provider:segmentation_id": SEG_ID,
                    'id': 'd897e21a-dfd6-4331-a5dd-7524fa421c3e',
                    'name': 'net1',
-                   'provider:network_type': 'vlan'}
+                   'provider:network_type': 'vlan',
+                   'network_qos_policy': None}
         context = mock.Mock(current=current, _network=current,
                             _segments=self._get_segments_list())
         return context
@@ -138,7 +134,8 @@ class SDNDriverTestCase(base.BaseTestCase):
                    'binding:vnic_type': 'direct',
                    'mac_address': '12:34:56:78:21:b6',
                    'name': 'port_test1',
-                   'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701'}
+                   'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
+                   'network_qos_policy': None}
 
         # The port context should have NetwrokContext object that contain
         # the segments list
@@ -151,7 +148,9 @@ class SDNDriverTestCase(base.BaseTestCase):
 
     def _get_mock_bind_operation_context(self,
                                          device_owner=DEVICE_OWNER_COMPUTE):
-        current = {'device_owner': device_owner}
+        current = {'device_owner': device_owner,
+                   'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
+                   'network_qos_policy': None}
         context = mock.Mock(current=current, _port=current,
                             segments_to_bind=self._get_segments_list())
         return context
@@ -198,23 +197,22 @@ class SDNDriverTestCase(base.BaseTestCase):
     def _test_no_operation(self, method, context, status_code,
                            *args, **kwargs):
         request_response = self._get_mock_request_response(status_code)
-        with mock.patch('requests.request',
+        with mock.patch('requests.Session.request',
                     return_value=request_response) as mock_method:
             method(context)
             assert not mock_method.called, ('Expected not to be called. '
                                        'Called %d times' % mock_method.calls)
 
-    def _test_single_operation(self, method, context, status_code,
-                               *args, **kwargs):
+    def _test_operation_with(self, method, context, status_code,
+                           *args, **kwargs):
         request_response = self._get_mock_request_response(status_code)
-        with mock.patch('requests.request',
+        with mock.patch('requests.Session.request',
                         return_value=request_response) as mock_method:
-                method(context)
-        mock_method.assert_called_once_with(
-            headers=sdn_const.JSON_HTTP_HEADER,
-            timeout=config.cfg.CONF.sdn.timeout,
-            auth=AuthMatcher(),
-            *args, **kwargs)
+            method(context)
+            mock_method.assert_called_with(
+                    headers=sdn_const.JSON_HTTP_HEADER,
+                    timeout=config.cfg.CONF.sdn.timeout,
+                    *args, **kwargs)
 
     def _test_create_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'create_%s_postcommit' %
@@ -222,8 +220,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         context = self._get_mock_operation_context(object_type)
         url = '%s/%s' % (config.cfg.CONF.sdn.url, object_type)
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
-        self._test_single_operation(method, context, status_code,
-                                    sdn_const.POST, **kwargs)
+        self._test_operation_with(method, context, status_code,
+                           sdn_const.POST, **kwargs)
 
     def _test_update_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'update_%s_postcommit' %
@@ -232,8 +230,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         url = '%s/%s/%s' % (config.cfg.CONF.sdn.url, object_type,
                             context.current['id'])
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
-        self._test_single_operation(method, context, status_code,
-                                    sdn_const.PUT, **kwargs)
+        self._test_operation_with(method, context, status_code,
+                           sdn_const.PUT, **kwargs)
 
     def _test_delete_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'delete_%s_postcommit' %
@@ -242,8 +240,8 @@ class SDNDriverTestCase(base.BaseTestCase):
         url = '%s/%s/%s' % (config.cfg.CONF.sdn.url, object_type,
                             context.current['id'])
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
-        self._test_single_operation(method, context, status_code,
-                                   sdn_const.DELETE, **kwargs)
+        self._test_operation_with(method, context, status_code,
+                           sdn_const.DELETE, **kwargs)
 
     def _test_bind_port(self, status_code, context, assert_called=True):
         method = getattr(self.mech, 'bind_port')
@@ -252,43 +250,55 @@ class SDNDriverTestCase(base.BaseTestCase):
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
 
         if assert_called:
-            self._test_single_operation(method, context, status_code,
-                                        sdn_const.POST, **kwargs)
+            self._test_operation_with(method, context, status_code,
+                                    sdn_const.POST, **kwargs)
         else:
             self._test_no_operation(method, context, status_code,
                                     sdn_const.POST, **kwargs)
 
-    def test_create_network_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_create_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_create_resource_postcommit(sdn_const.NETWORK_PATH,
                                                   status_code,
                                                   )
 
-    def test_update_port_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_update_port_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_update_resource_postcommit(sdn_const.PORT_PATH,
                                                   status_code,
                                                   )
 
-    def test_update_network_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_update_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_update_resource_postcommit(sdn_const.NETWORK_PATH,
                                                   status_code,
                                                   )
 
-    def test_delete_network_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_delete_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_delete_resource_postcommit(sdn_const.NETWORK_PATH,
                                                   status_code,
                                                   )
 
-    def test_delete_port_postcommit(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_delete_port_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
             self._test_delete_resource_postcommit(sdn_const.PORT_PATH,
                                                   status_code,
                                                   )
 
-    def test_bind_port_compute(self):
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_bind_port_compute(self, *args):
         """Bind port to VM
 
         SDN MD will call this kind of bind only
@@ -299,14 +309,29 @@ class SDNDriverTestCase(base.BaseTestCase):
         for status_code in self._get_http_request_codes():
             self._test_bind_port(status_code, context)
 
-    def test_bind_port_network(self):
-        """Bind port network context
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_bind_port_dhcp(self, *args):
+        """Bind port dhcp context
 
-        bind network port can be occuer when a port binded to a dhcp
+        bind network port occurs when a port binded to a dhcp
         SDN MD will filter such a calls
         """
         context = self._get_mock_bind_operation_context(
                                         neutron_const.DEVICE_OWNER_DHCP)
+        for status_code in self._get_http_request_codes():
+            self._test_bind_port(status_code, context)
+
+    @mock.patch('neutron.objects.qos.policy.QosPolicy.get_network_policy',
+                return_value=None)
+    def test_bind_port_router(self, *args):
+        """Bind port router context
+
+        bind network port occurs when a port binded to a router
+        SDN MD will filter such a calls
+        """
+        context = self._get_mock_bind_operation_context(
+                                        neutron_const.DEVICE_OWNER_ROUTER_GW)
         for status_code in self._get_http_request_codes():
             self._test_bind_port(status_code, context, assert_called=False)
 
