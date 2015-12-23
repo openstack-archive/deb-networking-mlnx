@@ -1,12 +1,12 @@
 networking-mlnx (1:7.0.0-1) unstable; urgency=medium
 
-  * New upstream release.
+  * New upstream release. (Closes: #808674)
   * Fixed (build-)depends for this release.
 
  -- Thomas Goirand <zigo@debian.org>  Wed, 23 Dec 2015 15:31:29 +0100
 
 networking-mlnx (2015.1~b1+git20150502+400747aa20-1) unstable; urgency=medium
 
-  * Initial release. (Closes: #XXXXXX)
+  * Initial release.
 
  -- Thomas Goirand <zigo@debian.org>  Tue, 17 Mar 2015 16:02:15 +0100
