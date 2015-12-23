@@ -2,6 +2,7 @@ networking-mlnx (1:7.0.0-1) unstable; urgency=medium
 
   * New upstream release. (Closes: #808674)
   * Fixed (build-)depends for this release.
+  * Added a watch file.
 
  -- Thomas Goirand <zigo@debian.org>  Wed, 23 Dec 2015 15:31:29 +0100
 
