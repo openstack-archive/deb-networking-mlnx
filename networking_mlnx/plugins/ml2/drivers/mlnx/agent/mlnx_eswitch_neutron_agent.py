@@ -148,10 +148,13 @@ class EswitchManager(object):
 
 class MlnxEswitchRpcCallbacks(sg_rpc.SecurityGroupAgentRpcCallbackMixin):
 
-    # Set RPC API version to 1.0 by default.
+    # Set RPC API version to 1.3 by default.
     # history
     #   1.1 Support Security Group RPC
-    target = oslo_messaging.Target(version='1.1')
+    #   1.2 Support DVR (Distributed Virtual Router) RPC (not supported)
+    #   1.3 Added param devices_to_update to security_groups_provider_updated
+    #       (works with NoopFirewallDriver)
+    target = oslo_messaging.Target(version='1.3')
 
     def __init__(self, context, agent, sg_agent):
         super(MlnxEswitchRpcCallbacks, self).__init__()
