@@ -1,2 +1,7 @@
 /usr/lib/python*
-usr/etc/neutron/plugins/ml2/ml2_conf_sdn.ini	/etc/neutron/plugins/ml2
+usr/etc/neutron/plugins/mlnx/mlnx_conf.ini etc/neutron/plugins/mlnx
+
+usr/etc/neutron/plugins/ml2/ml2_conf_sdn.ini etc/neutron/plugins/ml2
+
+usr/bin/ebrctl /usr/bin
+usr/bin/neutron-mlnx-agent /usr/bin

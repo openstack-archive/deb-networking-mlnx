@@ -3,7 +3,7 @@
 PYTHONS:=$(shell pyversions -vr)
 #PYTHON3S:=$(shell py3versions -vr)
 
-UPSTREAM_GIT := git://github.com/stackforge/networking-mlnx.git
+UPSTREAM_GIT := git://github.com/openstack/networking-mlnx.git
 include /usr/share/openstack-pkg-tools/pkgos.make
 
 export OSLO_PACKAGE_VERSION=$(VERSION)
@@ -38,7 +38,7 @@ endif
 
 override_dh_clean:
 	dh_clean -O--buildsystem=python_distutils
-	rm -rf build
+	rm -rf build .testrepository networking_mlnx.egg-info
 
 # Commands not to run
 override_dh_installcatalogs:

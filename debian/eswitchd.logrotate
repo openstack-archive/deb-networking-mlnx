@@ -1,0 +1,7 @@
+/var/log/neutron/eswitchd.log {
+    daily
+    missingok
+    compress
+    delaycompress
+    notifempty
+}

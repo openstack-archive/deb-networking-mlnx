@@ -1,0 +1,6 @@
+usr/etc/neutron/plugins/ml2/eswitchd.conf etc/neutron/plugins/ml2
+usr/etc/neutron/eswitchd-rootwrap.conf etc/neutron
+usr/etc/neutron/rootwrap.d/eswitchd.filters etc/neutron/rootwrap.d
+usr/bin/eswitchd-rootwrap /usr/bin
+usr/bin/eswitchd /usr/bin
+
