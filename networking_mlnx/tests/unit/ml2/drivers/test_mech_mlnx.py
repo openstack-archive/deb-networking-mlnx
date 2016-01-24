@@ -15,8 +15,9 @@
 
 from neutron.extensions import portbindings
 from neutron.plugins.ml2 import driver_api as api
-from neutron.plugins.ml2.drivers.mlnx import mech_mlnx
 from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
+
+from networking_mlnx.plugins.ml2.drivers.mlnx import mech_mlnx
 
 
 class MlnxMechanismBaseTestCase(base.AgentMechanismBaseTestCase):

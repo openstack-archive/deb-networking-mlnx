@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: networking-mlnx
-Version: 7.0.0
+Version: 8.0.0
 Summary: OpenStack Networking
 Home-page: http://www.openstack.org/
 Author: Mellanox
@@ -16,7 +16,7 @@ Mellanox Hardware.
 External Resources:
 ===================
 
-The Launchpad page for stackforge/networking-mlnx:
+The Launchpad page for openstack/networking-mlnx:
    https://launchpad.net/networking-mlnx
 
 File bugs for this project here:

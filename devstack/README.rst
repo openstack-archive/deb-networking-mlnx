@@ -6,7 +6,7 @@
 
 2) Add this as an external repository::
 
-    enable_plugin neutron_ml2_mlnx  git://git.openstack.org/stackforge/networking-mlnx <branch>
+    enable_plugin neutron_ml2_mlnx git://github.com/openstack/networking-mlnx <branch>
 
 3) update Q_ML2_PLUGIN_MECHANISM_DRIVERS with mlnx mech driver::
 
@@ -26,7 +26,7 @@
 1) Download DevStack
 
 2) Add this external repository:
-    enable_plugin neutron_ml2_mlnx  git://git.openstack.org/stackforge/networking-mlnx <branch>
+    enable_plugin neutron_ml2_mlnx git://github.com/openstack/networking-mlnx <branch>
 
 3) Add SDN plugin to mechanism drivers plugins list:
     Q_ML2_PLUGIN_MECHANISM_DRIVERS=sdnmechdriver,openvswitch

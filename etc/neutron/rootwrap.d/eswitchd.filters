@@ -1,0 +1,7 @@
+# eswitchd-rootwrap command filters for network nodes
+# This file should be owned by (and only-writeable by) the root user
+
+[Filters]
+ip: CommandFilter, ip, root
+ethtool: CommandFilter, ethtool, root
+ebrctl: CommandFilter, ebrctl, root
