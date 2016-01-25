@@ -1,8 +1,8 @@
-networking-mlnx (1:8.0.0~b2-1) UNRELEASED; urgency=medium
+networking-mlnx (1:8.0.0~b2-2) UNRELEASED; urgency=medium
 
-  * Non-maintainer upload.
+  * Added back Thomas Goirand <zigo@debian.org> to uploaders
 
- -- Lenny Verkhovsky <lennyb-guest@r-dcs33-1.mtr.labs.mlnx>  Sun, 24 Jan 2016 11:10:22 +0200
+ -- Lenny Verkhovsky <lennyb-guest@r-dcs33-1.mtr.labs.mlnx>  Mon, 25 Jan 2016 09:49:28 +0200
 
 networking-mlnx (1:7.0.0-1) unstable; urgency=medium
 
