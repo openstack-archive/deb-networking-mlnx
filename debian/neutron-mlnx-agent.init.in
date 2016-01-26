@@ -7,11 +7,11 @@
 # Should-Stop:       postgresql mysql keystone rabbitmq-server ntp
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Neutron Melanox Plugin Agent
-# Description:       Neutron Melanox Plugin Agent
+# Short-Description: Neutron Mellanox Plugin Agent
+# Description:       Neutron Mellanox Plugin Agent
 ### END INIT INFO
 
 # Author: Thomas Goirand <zigo@debian.org>
-DESC="OpenStack Neutron Melanox Plugin Agent"
+DESC="OpenStack Neutron Mellanox Plugin Agent"
 PROJECT_NAME=neutron
 NAME=${PROJECT_NAME}-mlnx-agent

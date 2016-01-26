@@ -1,6 +1,6 @@
 # vim:set ft=upstart ts=2 et:
 description "Neutron MLNX Plugin Agent"
-author "Chuck Short <zulcss@ubuntu.com>"
+author "Lenny Verkhovsky <lennyb@mellanox.com>"
 
 start on runlevel [2345]
 stop on runlevel [!2345]

@@ -1,8 +1,15 @@
-networking-mlnx (1:8.0.0~b2-2) UNRELEASED; urgency=medium
+networking-mlnx (1:8.0.0~b2) UNRELEASED; urgency=medium
 
+  [ Lenny Verkhovsky ]
   * Added back Thomas Goirand <zigo@debian.org> to uploaders
+  * changed neutron dependency version to ${binary:Version}
+  * added start/config scripts for eswitchd. This code is part of the networking-mlnx from mitaka
+  * fixed Melanox typo
+  * changed author up eswitchd.upstart
+  * changed urls from stackforge (depriicated) to openstack
+  * changed branch from liberty to mitaka in gbp.conf
 
- -- Lenny Verkhovsky <lennyb-guest@r-dcs33-1.mtr.labs.mlnx>  Mon, 25 Jan 2016 09:49:28 +0200
+ -- Lenny Verkhovsky <lennyb@mellanox.com>  Tue, 26 Jan 2016 16:24:11 +0200
 
 networking-mlnx (1:7.0.0-1) unstable; urgency=medium
 
