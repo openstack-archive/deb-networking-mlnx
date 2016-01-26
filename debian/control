@@ -18,7 +18,7 @@ Build-Depends-Indep: python-babel,
                      python-fixtures,
                      python-hacking,
                      python-mock,
-                     python-neutron (>= 1:8.0.0),
+                     python-neutron (>= 1:8.0.0~b2),
                      python-oslosphinx (>= 2.2.0),
                      python-oslotest (>= 1.5.1),
                      python-requests-mock (>= 0.5.1),
@@ -37,26 +37,53 @@ Package: python-networking-mlnx
 Architecture: all
 Section: python
 Depends: python-babel,
-         python-neutron (>= 1:8.0.0),
+         python-neutron (>= 1:8.0.0~b2),
          ${misc:Depends},
          ${python:Depends},
-Recommends: iputils-arping
-Description: OpenStack virtual network service - Mellanox plugin
+Description: OpenStack virtual network service - Mellanox plugin Python 2.7 files
  Neutron provides an API to dynamically request and configure virtual networks.
  These networks connect "interfaces" from other OpenStack services (such as
  vNICs from Nova VMs). The Neutron API supports extensions to provide advanced
  network capabilities, including QoS, ACLs, and network monitoring.
  .
- This package provides the Python files for the Mellanox plugin.
+ This package provides the Python 2.7 files for the Mellanox plugin.
 
-Package: eswitchd
+Package: networking-mlnx-common
 Architecture: all
-Provides: neutron-plugin
-Depends: python-babel,
-         python-neutron (>= 1:8.0.0),
+Depends: python-networking-mlnx (= ${binary:Version}),
+         neutron-common  (>= 1:8.0.0~b2),
          ${misc:Depends},
          ${python:Depends},
-Description: Neutron is a virtual network service for Openstack - Mellanox plugin
+Description: OpenStack virtual network service - Mellanox plugin common files
+ Neutron provides an API to dynamically request and configure virtual networks.
+ These networks connect "interfaces" from other OpenStack services (such as
+ vNICs from Nova VMs). The Neutron API supports extensions to provide advanced
+ network capabilities, including QoS, ACLs, and network monitoring.
+ .
+ This package provides the Mellanox plugin common files.
+
+Package: neutron-mlnx-agent
+Architecture: all
+Section: python
+Depends: networking-mlnx-common (= ${binary:Version}),
+         ${misc:Depends},
+         ${python:Depends},
+Recommends: iputils-arping
+Description: OpenStack virtual network service - Mellanox plugin agent
+ Neutron provides an API to dynamically request and configure virtual networks.
+ These networks connect "interfaces" from other OpenStack services (such as
+ vNICs from Nova VMs). The Neutron API supports extensions to provide advanced
+ network capabilities, including QoS, ACLs, and network monitoring.
+ .
+ This package provides the Mellanox plugin agent.
+
+Package: networking-mlnx-eswitchd
+Architecture: all
+Provides: neutron-plugin
+Depends: networking-mlnx-common (= ${binary:Version}),
+         ${misc:Depends},
+         ${python:Depends},
+Description: Neutron is a virtual network service for Openstack - Mellanox eswitchd
  Neutron is a virtual network service for Openstack, and a part of
  Netstack. Just like OpenStack Nova provides an API to dynamically
  request and configure virtual servers, Neutron provides an API to
@@ -66,6 +93,4 @@ Description: Neutron is a virtual network service for Openstack - Mellanox plugi
  advanced network capabilities (e.g., QoS, ACLs, network monitoring,
  etc.)
  .
- This package provides the Mellanox plugin.
-
-
+ This package provides the Mellanox eswitchd.
