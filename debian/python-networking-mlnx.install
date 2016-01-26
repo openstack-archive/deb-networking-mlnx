@@ -1,5 +1,5 @@
 /usr/lib/python*
 usr/bin/neutron-mlnx-agent
 usr/bin/ebrctl
-usr/bin/eswitchd-rootwrap /usr/bin
-usr/bin/eswitchd /usr/bin
+usr/bin/eswitchd-rootwrap
+usr/bin/eswitchd

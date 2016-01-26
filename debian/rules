@@ -9,7 +9,7 @@ include /usr/share/openstack-pkg-tools/pkgos.make
 export OSLO_PACKAGE_VERSION=$(VERSION)
 
 %:
-	dh $@ --buildsystem=python_distutils --with python2
+	dh $@ --buildsystem=python_distutils --with python2,systemd
 
 override_dh_auto_install:
 	set -e ; set -x ; for pyvers in $(PYTHONS); do \
@@ -38,7 +38,8 @@ endif
 
 override_dh_clean:
 	dh_clean -O--buildsystem=python_distutils
-	rm -rf build .testrepository networking_mlnx.egg-info
+	rm -rf build .testrepository
+	rm debian/*.service debian/*.init debian/*.upstart
 
 # Commands not to run
 override_dh_installcatalogs:
