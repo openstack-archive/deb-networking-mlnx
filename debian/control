@@ -2,8 +2,8 @@ Source: networking-mlnx
 Section: net
 Priority: optional
 Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
-Uploaders: Thomas Goirand <zigo@debian.org>
-           Lenny Verkhovsky <lennyb@mellanox.com>
+Uploaders: Thomas Goirand <zigo@debian.org>,
+           Lenny Verkhovsky <lennyb@mellanox.com>,
 Build-Depends: debhelper (>= 9),
                dh-python,
                dh-systemd,
@@ -50,8 +50,8 @@ Description: OpenStack virtual network service - Mellanox plugin Python 2.7 file
 
 Package: networking-mlnx-common
 Architecture: all
-Depends: python-networking-mlnx (= ${binary:Version}),
-         neutron-common  (>= 1:8.0.0~b2),
+Depends: neutron-common  (>= 1:8.0.0~b2),
+         python-networking-mlnx (= ${binary:Version}),
          ${misc:Depends},
          ${python:Depends},
 Description: OpenStack virtual network service - Mellanox plugin common files
@@ -68,7 +68,7 @@ Section: python
 Depends: networking-mlnx-common (= ${binary:Version}),
          ${misc:Depends},
          ${python:Depends},
-Recommends: iputils-arping
+Recommends: iputils-arping,
 Description: OpenStack virtual network service - Mellanox plugin agent
  Neutron provides an API to dynamically request and configure virtual networks.
  These networks connect "interfaces" from other OpenStack services (such as
@@ -79,7 +79,7 @@ Description: OpenStack virtual network service - Mellanox plugin agent
 
 Package: networking-mlnx-eswitchd
 Architecture: all
-Provides: neutron-plugin
+Provides: neutron-plugin,
 Depends: networking-mlnx-common (= ${binary:Version}),
          ${misc:Depends},
          ${python:Depends},
