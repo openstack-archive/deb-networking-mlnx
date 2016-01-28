@@ -39,7 +39,7 @@ endif
 override_dh_clean:
 	dh_clean -O--buildsystem=python_distutils
 	rm -rf build .testrepository
-	rm debian/*.service debian/*.init debian/*.upstart
+	rm -f debian/*.service debian/*.init debian/*.upstart
 
 # Commands not to run
 override_dh_installcatalogs:
