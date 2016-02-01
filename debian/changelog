@@ -1,4 +1,4 @@
-networking-mlnx (1:8.0.0~b2-1) UNRELEASED; urgency=medium
+networking-mlnx (1:8.0.0~b2-1ubuntu1) UNRELEASED; urgency=medium
 
   [ Lenny Verkhovsky ]
   * Added back Thomas Goirand <zigo@debian.org> to uploaders
@@ -9,7 +9,10 @@ networking-mlnx (1:8.0.0~b2-1) UNRELEASED; urgency=medium
   * changed urls from stackforge (depriicated) to openstack
   * changed branch from liberty to mitaka in gbp.conf
 
- -- Lenny Verkhovsky <lennyb@mellanox.com>  Tue, 26 Jan 2016 16:24:11 +0200
+  [ Lenny Verkhovsky ]
+  * updated to upstream f0734066d0beaee168b7e2bdf02ff8fcd8d91ee0 
+
+ -- Lenny Berkhovsky <lennyb@localhost>  Mon, 01 Feb 2016 16:17:29 +0200
 
 networking-mlnx (1:7.0.0-1) unstable; urgency=medium
 
