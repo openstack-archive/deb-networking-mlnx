@@ -37,8 +37,8 @@ mlx_daemon_opts = [
                help=('Daemon will do sync after max_polling_count '
                      '* default_timeout')),
     cfg.StrOpt('rootwrap_conf',
-               default='/etc/neutron/eswitchd-rootwrap.conf',
-               help=('eswitchd rootwrap configuration file'))
+               default='/etc/neutron/rootwrap.conf',
+               help=('rootwrap configuration file'))
 ]
 
 

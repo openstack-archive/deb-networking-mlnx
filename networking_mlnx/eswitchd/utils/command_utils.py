@@ -25,7 +25,7 @@ LOG = logging.getLogger(__name__)
 
 
 def get_root_helper():
-    root_helper = 'sudo eswitchd-rootwrap %s' % cfg.CONF.DAEMON.rootwrap_conf
+    root_helper = 'sudo neutron-rootwrap %s' % cfg.CONF.DAEMON.rootwrap_conf
     return root_helper
 
 
