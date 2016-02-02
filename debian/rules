@@ -19,10 +19,10 @@ override_dh_auto_install:
 
 override_dh_install:
 	dh_install --fail-missing
-	install -D -m 0644 $(CURDIR)/etc/neutron/plugins/ml2/eswitchd.conf      /etc/neutron/plugins/ml2/eswitchd.conf
-	install -D -m 0644 $(CURDIR)/etc/neutron/plugins/ml2/ml2_conf_sdn.ini   /etc/neutron/plugins/ml2/ml2_conf_sdn.ini
-	install -D -m 0644 $(CURDIR)/etc/neutron/plugins/mlnx/mlnx_conf.ini     /etc/neutron/plugins/mlnx/mlnx_conf.ini
-	install -D -m 0644 $(CURDIR)/etc/neutron/rootwrap.d/eswitchd.filters    /etc/neutron/rootwrap.d/eswitchd.filters
+	install -D -m 0644 $(CURDIR)/etc/neutron/plugins/ml2/eswitchd.conf	$(CURDIR)debian/networking-mlnx-common/etc/neutron/plugins/ml2/eswitchd.conf
+	install -D -m 0644 $(CURDIR)/etc/neutron/plugins/ml2/ml2_conf_sdn.ini   $(CURDIR)debian/networking-mlnx-common/etc/neutron/plugins/ml2/ml2_conf_sdn.ini
+	install -D -m 0644 $(CURDIR)/etc/neutron/plugins/mlnx/mlnx_conf.ini     $(CURDIR)debian/networking-mlnx-common/etc/neutron/plugins/mlnx/mlnx_conf.ini
+	install -D -m 0644 $(CURDIR)/etc/neutron/rootwrap.d/eswitchd.filters    $(CURDIR)debian/networking-mlnx-common/etc/neutron/rootwrap.d/eswitchd.filters
 
 override_dh_auto_test:
 ifeq (,$(findstring nocheck, $(DEB_BUILD_OPTIONS)))
