@@ -112,9 +112,18 @@ class EswitchManager(object):
             self.utils.set_port_vlan_id(physical_network,
                                         seg_id,
                                         port_mac)
-            self.utils.port_up(physical_network, port_mac)
-        else:
-            LOG.error(_LE('Unsupported network type %s'), network_type)
+
+        elif network_type == p_const.TYPE_FLAT:
+            LOG.info(_LI('Binding eSwitch for vNIC mac_address %(mac)s'
+                         'to flat network'),
+                     {'mac': port_mac})
+            seg_id = 0
+
+        self.utils.set_port_vlan_id(physical_network,
+                                    seg_id,
+                                    port_mac)
+
+        self.utils.port_up(physical_network, port_mac)
 
     def port_release(self, port_mac):
         """Clear port configuration from eSwitch."""
@@ -130,14 +139,6 @@ class EswitchManager(object):
                           network_id, network_type,
                           physical_network, segmentation_id):
         LOG.info(_LI("Provisioning network %s"), network_id)
-        if network_type == p_const.TYPE_VLAN:
-            LOG.debug("Creating VLAN Network")
-        else:
-            LOG.error(_LE("Unknown network type %(network_type)s "
-                          "for network %(network_id)s"),
-                      {'network_type': network_type,
-                       'network_id': network_id})
-            return
         data = {
             'physical_network': physical_network,
             'network_type': network_type,
