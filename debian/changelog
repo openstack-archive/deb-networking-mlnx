@@ -1,6 +1,7 @@
-networking-mlnx (1:8.0.0~b2-1ubuntu3) UNRELEASED; urgency=medium
+networking-mlnx (1:8.0.0_b2+2016.02.02.git.b647347c95-1) UNRELEASED; urgency=medium
 
   [ Lenny Verkhovsky ]
+  * New upstream release based on commit b647347c95.
   * Added back Thomas Goirand <zigo@debian.org> to uploaders
   * changed neutron dependency version to ${binary:Version}
   * added start/config scripts for eswitchd. This code is part of the networking-mlnx from mitaka
@@ -9,14 +10,7 @@ networking-mlnx (1:8.0.0~b2-1ubuntu3) UNRELEASED; urgency=medium
   * changed urls from stackforge (depriicated) to openstack
   * changed branch from liberty to mitaka in gbp.conf
 
-  [ Lenny Verkhovsky ]
-  * updated to upstream f0734066d0beaee168b7e2bdf02ff8fcd8d91ee0 
-  * removing eswitchd-rootwrap  
-
-  [ Lenny Berkhovsky ]
-  * updated to upstream b647347c95729d20ca6b9253a23251ac384a1894
-
- -- Lenny Berkhovsky <lennyb@localhost>  Tue, 02 Feb 2016 09:41:14 +0200
+ -- Lenny Berkhovsky <lennyb@mellanox.com>  Tue, 02 Feb 2016 09:41:14 +0200
 
 networking-mlnx (1:7.0.0-1) unstable; urgency=medium
 
