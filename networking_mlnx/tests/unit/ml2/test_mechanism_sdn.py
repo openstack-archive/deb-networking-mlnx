@@ -340,10 +340,10 @@ class SDNDriverTestCase(base.BaseTestCase):
         segment = {'api.NETWORK_TYPE': ""}
         segment[api.NETWORK_TYPE] = constants.TYPE_VLAN
         self.assertTrue(self.mech.check_segment(segment))
+        segment[api.NETWORK_TYPE] = constants.TYPE_FLAT
+        self.assertTrue(self.mech.check_segment(segment))
         # Validate a network type not currently supported
         segment[api.NETWORK_TYPE] = constants.TYPE_LOCAL
-        self.assertFalse(self.mech.check_segment(segment))
-        segment[api.NETWORK_TYPE] = constants.TYPE_FLAT
         self.assertFalse(self.mech.check_segment(segment))
         segment[api.NETWORK_TYPE] = constants.TYPE_GRE
         self.assertFalse(self.mech.check_segment(segment))

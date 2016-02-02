@@ -233,7 +233,7 @@ class SDNMechanismDriver(api.MechanismDriver):
         or False to indicate this to callers.
         """
         network_type = segment[api.NETWORK_TYPE]
-        return network_type in [constants.TYPE_VLAN]
+        return network_type in [constants.TYPE_VLAN, constants.TYPE_FLAT]
 
     def check_segments(self, segments):
         """Verify if there is a segment in a list of segments that valid for
