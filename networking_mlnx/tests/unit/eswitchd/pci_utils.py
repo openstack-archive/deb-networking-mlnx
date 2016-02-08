@@ -18,7 +18,7 @@ import re
 import sys
 
 import ethtool
-from neutron.i18n import _LE, _LW
+from networking_mlnx._i18n import _LE, _LW
 from oslo_log import log as logging
 
 from networking_mlnx.eswitchd.common import constants

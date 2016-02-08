@@ -15,8 +15,8 @@ import functools
 import requests
 import time
 
+from networking_mlnx._i18n import _LE
 from neutron.common import constants as neutron_const
-from neutron.i18n import _LE
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api

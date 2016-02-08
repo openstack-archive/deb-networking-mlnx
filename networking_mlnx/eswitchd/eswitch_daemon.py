@@ -17,7 +17,7 @@
 import sys
 import zmq
 
-from neutron.i18n import _LE, _LI
+from networking_mlnx._i18n import _LE, _LI
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils

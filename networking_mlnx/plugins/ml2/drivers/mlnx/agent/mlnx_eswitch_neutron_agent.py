@@ -33,7 +33,7 @@ from neutron.common import constants as q_constants
 from neutron.common import topics
 from neutron.common import utils as q_utils
 from neutron import context
-from neutron.i18n import _LE, _LI, _LW
+from networking_mlnx._i18n import _LE, _LI, _LW
 from neutron.plugins.common import constants as p_const
 
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import config  # noqa
