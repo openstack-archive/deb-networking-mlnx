@@ -30,8 +30,8 @@ Build-Depends-Indep: python-babel,
                      testrepository (>= 0.0.18),
 Standards-Version: 3.9.6
 Homepage: http://neutron.openstack.org/
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/networking-mlnx.git;a=summary
-Vcs-Git: git://anonscm.debian.org/openstack/networking-mlnx.git
+Vcs-Browser: https://anonscm.debian.org/cgit/openstack/networking-mlnx.git/
+Vcs-Git: https://anonscm.debian.org/git/openstack/networking-mlnx.git
 
 Package: python-networking-mlnx
 Architecture: all
