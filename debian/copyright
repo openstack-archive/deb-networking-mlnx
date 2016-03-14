@@ -2,13 +2,13 @@ Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: networking-mlnx
 Source: git://github.com/openstack/networking-mlnx.git
 
-Files: debian/*
-Copyright: (c) 2015, Thomas Goirand <zigo@debian.org>
-License: Apache-2.0
-
 Files: *
 Copyright: (c) 2011-2012, OpenStack, LLC.
            (c) 2013-2015, OpenStack Foundation <openstack-dev@lists.openstack.org>
+License: Apache-2.0
+
+Files: debian/*
+Copyright: (c) 2015-2016, Thomas Goirand <zigo@debian.org>
 License: Apache-2.0
 
 License: Apache-2.0

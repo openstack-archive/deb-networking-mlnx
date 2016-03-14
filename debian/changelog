@@ -16,6 +16,7 @@ networking-mlnx (1:8.0.0~b2+2016.02.02.git.b647347c95-2) UNRELEASED; urgency=med
 
   [ Thomas Goirand ]
   * Standards-Version: 3.9.7 ( no change).
+  * Fixed debian/copyright ordering.
 
  -- Thomas Goirand <zigo@debian.org>  Mon, 14 Mar 2016 08:48:00 +0000
 
