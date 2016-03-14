@@ -18,7 +18,7 @@ import re
 import sys
 
 import ethtool
-from neutron.i18n import _LE, _LW
+from networking_mlnx._i18n import _LE, _LW
 from oslo_log import log as logging
 
 from networking_mlnx.eswitchd.common import constants
@@ -53,7 +53,7 @@ class pciUtils(object):
                     vfs_info[vf_pci] = {'vf_num': vf_num,
                                         'vf_device_type': vf_device_type}
         except Exception:
-            LOG.exception(_LE("PCI device %s not found"), pf)
+            LOG.error(_LE("PCI device %s not found"), pf)
         return vfs_info
 
     def get_dev_attr(self, attr_path):

@@ -1,7 +1,7 @@
-networking-mlnx (1:8.0.0~b2+2016.02.02.git.b647347c95-1) experimental; urgency=medium
+networking-mlnx (1:8.0.0~b3-1) experimental; urgency=medium
 
   [ Lenny Verkhovsky ]
-  * New upstream release based on commit b647347c95.
+  * New upstream release.
   * Added back Thomas Goirand <zigo@debian.org> to uploaders
   * changed neutron dependency version to ${binary:Version}
   * added start/config scripts for eswitchd. This code is part of the
