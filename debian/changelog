@@ -4,7 +4,8 @@ networking-mlnx (1:8.0.0~b2+2016.02.02.git.b647347c95-2) UNRELEASED; urgency=med
   * New upstream release based on commit b647347c95.
   * Added back Thomas Goirand <zigo@debian.org> to uploaders
   * changed neutron dependency version to ${binary:Version}
-  * added start/config scripts for eswitchd. This code is part of the networking-mlnx from mitaka
+  * added start/config scripts for eswitchd. This code is part of the
+    networking-mlnx from mitaka.
   * fixed Melanox typo
   * changed author up eswitchd.upstart
   * changed urls from stackforge (depriicated) to openstack
