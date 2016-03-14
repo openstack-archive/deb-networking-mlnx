@@ -16,7 +16,7 @@
 import glob
 import sys
 
-from networking_mlnx._i18n import _LE, _LI, _LW
+from neutron.i18n import _LE, _LI, _LW
 from oslo_log import log as logging
 
 from networking_mlnx.eswitchd.common import constants
@@ -340,17 +340,10 @@ class eSwitchHandler(object):
                       vf_device_type)
 
     def _config_vlan_ib_cx3(self, vlan, pf_mlx_dev, dev, hca_port):
-        if vlan == 0:
-            ppkey_idx = self._get_pkey_idx(
-                int(DEFAULT_PKEY, 16), pf_mlx_dev, hca_port)
-            if ppkey_idx >= 0:
-                self._config_vf_pkey(
-                    ppkey_idx, DEFAULT_PKEY_IDX, pf_mlx_dev, dev, hca_port)
-        else:
-            ppkey_idx = self._get_pkey_idx(str(vlan), pf_mlx_dev, hca_port)
-            if ppkey_idx:
-                self._config_vf_pkey(
-                    ppkey_idx, DEFAULT_PKEY_IDX, pf_mlx_dev, dev, hca_port)
+        ppkey_idx = self._get_pkey_idx(str(vlan), pf_mlx_dev, hca_port)
+        if ppkey_idx:
+            self._config_vf_pkey(
+                ppkey_idx, DEFAULT_PKEY_IDX, pf_mlx_dev, dev, hca_port)
 
     def _get_pkey_idx(self, vlan, pf_mlx_dev, hca_port):
         PKEYS_PATH = "/sys/class/infiniband/%s/ports/%s/pkeys/*"

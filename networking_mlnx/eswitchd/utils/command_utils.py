@@ -17,7 +17,7 @@ import os
 import shlex
 import subprocess
 
-from networking_mlnx._i18n import _LI
+from neutron.i18n import _LI
 from oslo_config import cfg
 from oslo_log import log as logging
 

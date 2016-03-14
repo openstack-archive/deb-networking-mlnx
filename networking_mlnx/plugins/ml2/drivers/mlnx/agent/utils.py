@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from networking_mlnx._i18n import _LE
+from neutron.i18n import _LE
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import importutils

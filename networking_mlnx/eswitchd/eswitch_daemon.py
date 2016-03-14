@@ -17,7 +17,7 @@
 import sys
 import zmq
 
-from networking_mlnx._i18n import _LE, _LI
+from neutron.i18n import _LE, _LI
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -81,21 +81,19 @@ class MlxEswitchDaemon(object):
         if msg:
             data = jsonutils.loads(msg)
 
-        msg = None
         if data:
-            try:
-                result = self.dispatcher.handle_msg(data)
-                msg = jsonutils.dumps(result)
-            except Exception as e:
-                LOG.exception(_LE("exception during message handling - %s"), e)
-                msg = str(e)
+            result = self.dispatcher.handle_msg(data)
+            msg = jsonutils.dumps(result)
             sender.send(msg)
 
     def daemon_loop(self):
         LOG.info(_LI("Daemon Started!"))
         polling_counter = 0
         while True:
-            self._handle_msg()
+            try:
+                self._handle_msg()
+            except Exception as e:
+                LOG.exception(_LE("exception during message handling - %s"), e)
             if polling_counter == self.max_polling_count:
                 LOG.debug("Resync devices")
             # self.eswitch_handler.sync_devices()
