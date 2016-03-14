@@ -16,7 +16,7 @@
 from lxml import etree
 
 import libvirt
-from neutron.i18n import _LE, _LI, _LW
+from networking_mlnx._i18n import _LE, _LI, _LW
 from oslo_log import log as logging
 
 from networking_mlnx.eswitchd.common import constants

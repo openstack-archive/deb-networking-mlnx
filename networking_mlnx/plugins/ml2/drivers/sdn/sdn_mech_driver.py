@@ -15,8 +15,8 @@ import functools
 import requests
 import time
 
+from networking_mlnx._i18n import _LE
 from neutron.common import constants as neutron_const
-from neutron.i18n import _LE
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api
@@ -233,7 +233,7 @@ class SDNMechanismDriver(api.MechanismDriver):
         or False to indicate this to callers.
         """
         network_type = segment[api.NETWORK_TYPE]
-        return network_type in [constants.TYPE_VLAN]
+        return network_type in [constants.TYPE_VLAN, constants.TYPE_FLAT]
 
     def check_segments(self, segments):
         """Verify if there is a segment in a list of segments that valid for
