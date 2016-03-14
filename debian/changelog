@@ -17,6 +17,7 @@ networking-mlnx (1:8.0.0~b3-1) experimental; urgency=medium
   [ Thomas Goirand ]
   * Standards-Version: 3.9.7 ( no change).
   * Fixed debian/copyright ordering.
+  * Added debian/patches/deleted_non_working_tests.patch.
 
  -- Thomas Goirand <zigo@debian.org>  Mon, 14 Mar 2016 08:48:00 +0000
 
