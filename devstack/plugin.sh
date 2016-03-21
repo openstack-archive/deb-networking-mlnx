@@ -1,4 +1,4 @@
-# plugin.sh - DevStack extras script to install mlnx MD
+# plugin.sh - DevStack extras script to install mlnx_infiniband MD
 
 source ${DEST}/neutron_ml2_mlnx/devstack/lib/neutron_ml2_mlnx
 
