@@ -15,3 +15,4 @@
 DESC="OpenStack Neutron Mellanox Plugin Agent"
 PROJECT_NAME=neutron
 NAME=${PROJECT_NAME}-mlnx-agent
+DAEMON_ARGS="--config-file=/etc/neutron/plugins/mlnx/mlnx_conf.ini"
