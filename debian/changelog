@@ -1,3 +1,11 @@
+networking-mlnx (1:8.0.0~b3-2) UNRELEASED; urgency=medium
+
+  * Added missing python-lxml (build-)depends.
+  * Added --config-file /etc/neutron/plugins/ml2/eswitchd.conf when starting
+    the eswitchd daemon.
+
+ -- Thomas Goirand <zigo@debian.org>  Mon, 21 Mar 2016 10:14:14 +0100
+
 networking-mlnx (1:8.0.0~b3-1) experimental; urgency=medium
 
   [ Lenny Verkhovsky ]

@@ -15,3 +15,4 @@
 DESC="OpenStack Networking Mellanox Plugin eswitchd"
 PROJECT_NAME=neutron
 NAME=eswitchd
+DAEMON_ARGS="--config-file=/etc/neutron/plugins/ml2/eswitchd.conf"
