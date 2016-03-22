@@ -65,7 +65,7 @@ function check_eswitchd {
 }
 
 function cleanup_eswitch {
-    sudo rm -rf ${ESWITCHD_CONF_DIR}
+    sudo rm -rf ${ESWITCHD_CONF_FILE}
 }
 
 # Restore trace
