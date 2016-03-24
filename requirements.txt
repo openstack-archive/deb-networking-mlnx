@@ -4,4 +4,5 @@
 pbr<2.0,>=0.11
 Babel>=1.3
 lxml
+zmq
 -e git://git.openstack.org/openstack/neutron.git@stable/mitaka#egg=neutron
