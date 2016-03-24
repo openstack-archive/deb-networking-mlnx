@@ -13,11 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import shlex
-import subprocess
-
-from networking_mlnx._i18n import _LI
+from oslo_concurrency import processutils
 from oslo_config import cfg
 from oslo_log import log as logging
 
@@ -29,27 +25,8 @@ def get_root_helper():
     return root_helper
 
 
-def execute(cmd, root_helper=None, process_input=None, addl_env=None,
-            check_exit_code=True, return_stderr=False):
-    if not root_helper:
-        root_helper = get_root_helper()
-    cmd = shlex.split(root_helper) + cmd
-    cmd = map(str, cmd)
-    LOG.info(_LI("Running command: %s") % " ".join(cmd))
-    env = os.environ.copy()
-    if addl_env:
-        env.update(addl_env)
-    obj = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                           env=env)
-
-    _stdout, _stderr = (process_input and
-                        obj.communicate(process_input) or
-                        obj.communicate())
-    obj.stdin.close()
-    m = ("\nCommand: %s\nExit code: %s\nStdout: %r\nStderr: %r" %
-         (cmd, obj.returncode, _stdout, _stderr))
-    LOG.info(m)
-    if obj.returncode and check_exit_code:
-        raise RuntimeError(m)
-    return return_stderr and (_stdout, _stderr) or _stdout
+def execute(*cmd, **kwargs):
+    if kwargs.get('root_helper') is None:
+        kwargs['run_as_root'] = True
+        kwargs['root_helper'] = get_root_helper()
+    return processutils.execute(*cmd, **kwargs)

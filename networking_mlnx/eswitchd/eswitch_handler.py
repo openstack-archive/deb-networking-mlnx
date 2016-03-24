@@ -23,7 +23,7 @@ from networking_mlnx.eswitchd.common import constants
 from networking_mlnx.eswitchd.common import exceptions
 from networking_mlnx.eswitchd.db import eswitch_db
 from networking_mlnx.eswitchd.resource_mngr import ResourceManager
-from networking_mlnx.eswitchd.utils.command_utils import execute
+from networking_mlnx.eswitchd.utils import command_utils
 from networking_mlnx.eswitchd.utils import pci_utils
 
 
@@ -243,7 +243,7 @@ class eSwitchHandler(object):
         path = constants.PKEY_INDEX_PATH % (pf_mlx_dev, vf_pci_id,
                                             hca_port, pkey_idx)
         cmd = ['ebrctl', 'write-sys', path, ppkey_idx]
-        execute(cmd, root_helper=None)
+        command_utils.execute(*cmd)
 
     def _get_guid_idx(self, pf_mlx_dev, dev, hca_port):
         path = constants.GUID_INDEX_PATH % (pf_mlx_dev, dev, hca_port)
@@ -291,7 +291,7 @@ class eSwitchHandler(object):
         guid_idx = self._get_guid_idx(pf_mlx_dev, dev, hca_port)
         path = constants.ADMIN_GUID_PATH % (pf_mlx_dev, hca_port, guid_idx)
         cmd = ['ebrctl', 'write-sys', path, vguid]
-        execute(cmd, root_helper=None)
+        command_utils.execute(*cmd)
         ppkey_idx = self._get_pkey_idx(
             int(DEFAULT_PKEY, 16), pf_mlx_dev, hca_port)
         if ppkey_idx >= 0:
@@ -312,10 +312,10 @@ class eSwitchHandler(object):
                                                        'vf_num': vf_num}
         for path in (guid_node, guid_port):
             cmd = ['ebrctl', 'write-sys', path, vguid]
-            execute(cmd, root_helper=None)
+            command_utils.execute(*cmd)
 
         cmd = ['ebrctl', 'write-sys', guid_poliy, 'Up\n']
-        execute(cmd, root_helper=None)
+        command_utils.execute(*cmd)
 
     def _config_vlan_ib(self, fabric, dev, vlan):
         fabric_details = self.rm.get_fabric_details(fabric)
@@ -361,4 +361,4 @@ class eSwitchHandler(object):
 
     def _config_port_up(self, dev):
         cmd = ['ip', 'link', 'set', dev, 'up']
-        execute(cmd, root_helper=None)
+        command_utils.execute(*cmd)
