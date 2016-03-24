@@ -32,7 +32,6 @@ LOG = logging.getLogger(__name__)
 INVALID_PKEY = 'none'
 DEFAULT_PKEY_IDX = '0'
 PARTIAL_PKEY_IDX = '1'
-BASE_PKEY = '0x8000'
 DEFAULT_MASK = 0x7fff
 DEFAULT_PKEY = '0xffff'
 
@@ -112,14 +111,6 @@ class eSwitchHandler(object):
                 self.eswitches[fabric].detach_vnic(vnic_mac=mac)
             else:
                 LOG.info(_LI("No Fabric defined for device %s"), dev)
-
-    def set_fabric_mapping(self, fabric, interface):
-        dev = self.rm.get_fabric_for_dev(interface)
-        if not dev:
-            fabrics = [(fabric, interface)]
-            self.add_fabrics(fabrics)
-            dev = interface
-        return (fabric, interface)
 
     def get_vnics(self, fabrics):
         vnics = {}

@@ -53,11 +53,3 @@ def execute(cmd, root_helper=None, process_input=None, addl_env=None,
     if obj.returncode and check_exit_code:
         raise RuntimeError(m)
     return return_stderr and (_stdout, _stderr) or _stdout
-
-
-def execute_bg(cmd, root_helper=None, log=None):
-    if not root_helper:
-        root_helper = get_root_helper()
-    cmd = shlex.split(root_helper) + cmd
-    cmd = map(str, cmd)
-    LOG.info(_LI("Running command: %s") % " ".join(cmd))

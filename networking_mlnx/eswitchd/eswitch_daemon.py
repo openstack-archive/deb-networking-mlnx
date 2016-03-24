@@ -50,7 +50,7 @@ class MlxEswitchDaemon(object):
                 try:
                     fabric, pf = entry.split(':')
                     fabrics.append((fabric, pf))
-                except ValueError as ex:
+                except ValueError:
                     LOG.error(_LE("Invalid fabric: "
                                 "'%(entry)s' - "
                                 "Service terminated!"),
@@ -87,7 +87,7 @@ class MlxEswitchDaemon(object):
                 result = self.dispatcher.handle_msg(data)
                 msg = jsonutils.dumps(result)
             except Exception as e:
-                LOG.exception(_LE("exception during message handling - %s"), e)
+                LOG.exception(_LE("Exception during message handling - %s"), e)
                 msg = str(e)
             sender.send(msg)
 
