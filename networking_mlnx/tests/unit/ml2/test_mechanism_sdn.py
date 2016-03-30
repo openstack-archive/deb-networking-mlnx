@@ -31,7 +31,7 @@ from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 PLUGIN_NAME = 'neutron.plugins.ml2.plugin.Ml2Plugin'
 SEG_ID = 4L
 DEVICE_OWNER_COMPUTE = 'compute:None'
-MECHANISM_DRIVER_NAME = 'sdnmechdriver'
+MECHANISM_DRIVER_NAME = 'mlnx_sdn_assist'
 
 
 class SDNTestCase(test_plugin.Ml2PluginV2TestCase):

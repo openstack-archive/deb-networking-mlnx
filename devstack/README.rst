@@ -8,9 +8,9 @@
 
     enable_plugin neutron_ml2_mlnx git://github.com/openstack/networking-mlnx <branch>
 
-3) update Q_ML2_PLUGIN_MECHANISM_DRIVERS with mlnx mech driver::
+3) update Q_ML2_PLUGIN_MECHANISM_DRIVERS with mlnx_infiniband mech driver::
 
-    Q_ML2_PLUGIN_MECHANISM_DRIVERS=mlnx,openvswitch
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS=mlnx_infiniband,openvswitch
 
 4) enable switchd mlnx-agt and mlnx_dnsmasq services::
 
@@ -29,7 +29,7 @@
     enable_plugin neutron_ml2_mlnx git://github.com/openstack/networking-mlnx <branch>
 
 3) Add SDN plugin to mechanism drivers plugins list:
-    Q_ML2_PLUGIN_MECHANISM_DRIVERS=sdnmechdriver,openvswitch
+    Q_ML2_PLUGIN_MECHANISM_DRIVERS=mlnx_sdn_assist,openvswitch
 
 4) Add SDN mandatory configurations, for example::
 
