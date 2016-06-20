@@ -185,7 +185,7 @@ class TestMlnxDnsmasq(test_dhcp.TestDnsmasq):
                          '192.168.0.6,'
                          'set:ccccccccc-cccc-cccc-cccc-ccccccccc\n').lstrip()
 
-        dm = self._get_dnsmasq(test_dhcp.FakeV4NetworkClientId)
+        dm = self._get_dnsmasq(test_dhcp.FakeV4NetworkClientId())
         dm._output_hosts_file()
         self.safe.assert_has_calls([mock.call(exp_host_name,
                                               exp_host_data)])
