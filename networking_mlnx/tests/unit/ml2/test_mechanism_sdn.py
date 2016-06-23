@@ -200,8 +200,7 @@ class SDNDriverTestCase(base.BaseTestCase):
         with mock.patch('requests.Session.request',
                     return_value=request_response) as mock_method:
             method(context)
-            assert not mock_method.called, ('Expected not to be called. '
-                                       'Called %d times' % mock_method.calls)
+            self.assertFalse(mock_method.called)
 
     def _test_operation_with(self, method, context, status_code,
                            *args, **kwargs):
