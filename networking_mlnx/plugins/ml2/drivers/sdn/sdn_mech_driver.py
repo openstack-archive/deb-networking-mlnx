@@ -252,6 +252,8 @@ class SDNMechanismDriver(api.MechanismDriver):
                                 headers=sdn_const.JSON_HTTP_HEADER,
                                 data=data, timeout=self.timeout)
             LOG.debug("request status: %d", r.status_code)
+            if r.text:
+                LOG.debug("request text: %s", r.text)
             r.raise_for_status()
         except Exception as e:
             raise sdn_exc.SDNConnectionError(dest_url=dest_url, msg=e)
