@@ -209,10 +209,16 @@ class SDNDriverTestCase(base.BaseTestCase):
         with mock.patch('requests.Session.request',
                         return_value=request_response) as mock_method:
             method(context)
-            mock_method.assert_called_with(
+            login_args = mock.call(
+                sdn_const.POST, mock.ANY,
+                headers=sdn_const.LOGIN_HTTP_HEADER,
+                data=mock.ANY, timeout=config.cfg.CONF.sdn.timeout)
+            if status_code < 400:
+                operation_args = mock.call(
                     headers=sdn_const.JSON_HTTP_HEADER,
-                    timeout=config.cfg.CONF.sdn.timeout,
-                    *args, **kwargs)
+                    timeout=config.cfg.CONF.sdn.timeout, *args, **kwargs)
+                self.assertEqual(login_args, mock_method.mock_calls[0])
+                self.assertEqual(operation_args, mock_method.mock_calls[1])
 
     def _test_create_resource_postcommit(self, object_type, status_code):
         method = getattr(self.mech, 'create_%s_postcommit' %

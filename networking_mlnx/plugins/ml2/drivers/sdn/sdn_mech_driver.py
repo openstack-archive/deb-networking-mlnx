@@ -13,7 +13,6 @@
 #    under the License.
 
 import functools
-import time
 
 from neutron.common import constants as neutron_const
 from neutron.objects.qos import policy as policy_object
@@ -48,10 +47,6 @@ sdn_opts = [
         cfg.IntOpt('timeout',
                    help=_("HTTP timeout in seconds."),
                    default=10
-                   ),
-        cfg.IntOpt('session_timeout',
-                   help=_("Login session timeout in seconds."),
-                   default=86400
                    ),
 ]
 
@@ -109,28 +104,22 @@ class SDNMechanismDriver(api.MechanismDriver):
     def _strings_to_url(self, *args):
         return "/".join(filter(None, args))
 
-    def _getSession(self):
-        if self.session_start == 0 or (time.time() - self.session_start
-                                       >= self.session_timeout):
-            login_url = self._strings_to_url(str(self.url), "login")
-            login_data = "username=%s&password=%s" % (self.username,
-                                                      self.password)
-            login_headers = sdn_const.LOGIN_HTTP_HEADER
-            try:
-                session = requests.session()
-                LOG.debug("Login to SDN Provider. Login URL %(url)s",
-                         {'url': login_url})
-                r = session.request(sdn_const.POST, login_url, data=login_data,
-                                    headers=login_headers)
-                LOG.debug("request status: %d", r.status_code)
-                r.raise_for_status()
-            except Exception as e:
-                raise sdn_exc.SDNLoginError(login_url=login_url, msg=e)
-
-            self.session_start = time.time()
-            self.session = session
-
-        return self.session
+    def _get_session(self):
+        login_url = self._strings_to_url(str(self.url), "login")
+        login_data = "username=%s&password=%s" % (self.username,
+                                                  self.password)
+        login_headers = sdn_const.LOGIN_HTTP_HEADER
+        try:
+            session = requests.session()
+            LOG.debug("Login to SDN Provider. Login URL %(url)s",
+                     {'url': login_url})
+            r = session.request(sdn_const.POST, login_url, data=login_data,
+                                headers=login_headers, timeout=self.timeout)
+            LOG.debug("request status: %d", r.status_code)
+            r.raise_for_status()
+        except Exception as e:
+            raise sdn_exc.SDNLoginError(login_url=login_url, msg=e)
+        return session
 
     def initialize(self):
         self.url = cfg.CONF.sdn.url
@@ -142,7 +131,6 @@ class SDNMechanismDriver(api.MechanismDriver):
         self.username = cfg.CONF.sdn.username
         self.password = cfg.CONF.sdn.password
         self.timeout = cfg.CONF.sdn.timeout
-        self.session_timeout = cfg.CONF.sdn.session_timeout
         self.session_start = 0
         self._validate_mandatory_params_exist()
 
@@ -255,7 +243,7 @@ class SDNMechanismDriver(api.MechanismDriver):
         dest_url = self._strings_to_url(self.url, self.domain, urlpath)
 
         data = jsonutils.dumps(data, indent=2)
-        session = self._getSession()
+        session = self._get_session()
 
         try:
             LOG.debug("Sending METHOD %(method)s URL %(url)s JSON %(data)s",
