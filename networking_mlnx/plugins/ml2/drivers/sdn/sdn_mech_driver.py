@@ -11,11 +11,10 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+
 import functools
-import requests
 import time
 
-from networking_mlnx._i18n import _LE
 from neutron.common import constants as neutron_const
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
@@ -23,9 +22,11 @@ from neutron.plugins.ml2 import driver_api as api
 from oslo_config import cfg
 from oslo_log import log
 from oslo_serialization import jsonutils
+import requests
 
-import networking_mlnx.plugins.ml2.drivers.sdn.constants as sdn_const
-import networking_mlnx.plugins.ml2.drivers.sdn.exceptions as sdn_exc
+from networking_mlnx._i18n import _LE
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
+from networking_mlnx.plugins.ml2.drivers.sdn import exceptions as sdn_exc
 
 LOG = log.getLogger(__name__)
 
