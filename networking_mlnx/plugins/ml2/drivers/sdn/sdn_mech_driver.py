@@ -254,7 +254,8 @@ class SDNMechanismDriver(api.MechanismDriver):
             LOG.debug("request status: %d", r.status_code)
             if r.text:
                 LOG.debug("request text: %s", r.text)
-            r.raise_for_status()
+            if r.status_code != requests.codes.not_implemented:
+                r.raise_for_status()
         except Exception as e:
             raise sdn_exc.SDNConnectionError(dest_url=dest_url, msg=e)
 
