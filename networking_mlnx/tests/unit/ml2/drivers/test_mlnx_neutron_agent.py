@@ -70,7 +70,7 @@ class TestEswitchAgent(base.BaseTestCase):
     def setUp(self):
         super(TestEswitchAgent, self).setUp()
         cfg.CONF.set_default('firewall_driver',
-                             'neutron.agent.firewall.NoopFirewallDriver',
+                             'noop',
                              group='SECURITYGROUP')
 
         class MockFixedIntervalLoopingCall(object):
