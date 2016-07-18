@@ -36,6 +36,7 @@ sdn_opts = [
         cfg.StrOpt('domain',
                    help=_("Cloud domain name in SDN provider "
                           "(for example: cloudx)"),
+                   default='cloudx'
                    ),
         cfg.StrOpt('username',
                    help=_("HTTP username for authentication."),

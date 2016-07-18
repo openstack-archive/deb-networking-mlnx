@@ -38,7 +38,7 @@ class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
     _mechanism_drivers = ['logger', MECHANISM_DRIVER_NAME]
 
     def setUp(self):
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo/cloudx',
+        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
@@ -54,7 +54,7 @@ class SDNTestCase(test_plugin.Ml2PluginV2TestCase):
 
 class SDNMechanismConfigTests(testlib_api.SqlTestCase):
 
-    def _set_config(self, url='http://127.0.0.1/neo/cloudx',
+    def _set_config(self, url='http://127.0.0.1/neo',
                     username='admin',
                     password='admin'):
         config.cfg.CONF.set_override('mechanism_drivers',
@@ -102,7 +102,7 @@ class SDNDriverTestCase(base.BaseTestCase):
         super(SDNDriverTestCase, self).setUp()
         config.cfg.CONF.set_override('mechanism_drivers',
                                      ['logger', MECHANISM_DRIVER_NAME], 'ml2')
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo/cloudx',
+        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo',
                                      sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
         config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
@@ -226,7 +226,10 @@ class SDNDriverTestCase(base.BaseTestCase):
         method = getattr(self.mech, 'create_%s_postcommit' %
                          object_type.lower())
         context = self._get_mock_operation_context(object_type)
-        url = '%s/%s' % (config.cfg.CONF.sdn.url, object_type)
+        url = (
+            '%s/%s/%s' % (config.cfg.CONF.sdn.url,
+                          config.cfg.CONF.sdn.domain,
+                          object_type))
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
         self._test_operation_with(method, context, status_code,
                            sdn_const.POST, **kwargs)
@@ -235,8 +238,11 @@ class SDNDriverTestCase(base.BaseTestCase):
         method = getattr(self.mech, 'update_%s_postcommit' %
                          object_type.lower())
         context = self._get_mock_operation_context(object_type)
-        url = '%s/%s/%s' % (config.cfg.CONF.sdn.url, object_type,
-                            context.current['id'])
+        url = (
+            '%s/%s/%s/%s' % (config.cfg.CONF.sdn.url,
+                          config.cfg.CONF.sdn.domain,
+                          object_type,
+                          context.current['id']))
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
         self._test_operation_with(method, context, status_code,
                            sdn_const.PUT, **kwargs)
@@ -245,8 +251,11 @@ class SDNDriverTestCase(base.BaseTestCase):
         method = getattr(self.mech, 'delete_%s_postcommit' %
                          object_type.lower())
         context = self._get_mock_operation_context(object_type)
-        url = '%s/%s/%s' % (config.cfg.CONF.sdn.url, object_type,
-                            context.current['id'])
+        url = (
+            '%s/%s/%s/%s' % (config.cfg.CONF.sdn.url,
+                             config.cfg.CONF.sdn.domain,
+                             object_type,
+                             context.current['id']))
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
         self._test_operation_with(method, context, status_code,
                            sdn_const.DELETE, **kwargs)
@@ -254,7 +263,10 @@ class SDNDriverTestCase(base.BaseTestCase):
     def _test_bind_port(self, status_code, context, assert_called=True):
         method = getattr(self.mech, 'bind_port')
         object_type = sdn_const.PORT_PATH
-        url = '%s/%s' % (config.cfg.CONF.sdn.url, object_type)
+        url = (
+            '%s/%s/%s' % (config.cfg.CONF.sdn.url,
+                          config.cfg.CONF.sdn.domain,
+                          object_type))
         kwargs = {'url': url, 'data': DataMatcher(context, object_type)}
 
         if assert_called:
