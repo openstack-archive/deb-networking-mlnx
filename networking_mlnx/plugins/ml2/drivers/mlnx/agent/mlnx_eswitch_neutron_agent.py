@@ -20,22 +20,21 @@ import time
 
 import eventlet
 eventlet.monkey_patch()
-
+from neutron.agent import rpc as agent_rpc
+from neutron.agent import securitygroups_rpc as sg_rpc
+from neutron.common import config as common_config
+from neutron.common import topics
+from neutron.common import utils as q_utils
+from neutron import context
+from neutron.plugins.common import constants as p_const
+from neutron_lib import constants
 from oslo_config import cfg
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import loopingcall
+import six
 
-from neutron.agent import rpc as agent_rpc
-from neutron.agent import securitygroups_rpc as sg_rpc
-from neutron.common import config as common_config
-from neutron.common import constants as q_constants
-from neutron.common import topics
-from neutron.common import utils as q_utils
-from neutron import context
 from networking_mlnx._i18n import _LE, _LI, _LW
-from neutron.plugins.common import constants as p_const
-
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import config  # noqa
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
@@ -52,7 +51,7 @@ class EswitchManager(object):
         self.utils.define_fabric_mappings(interface_mappings)
 
     def get_port_id_by_mac(self, port_mac):
-        for network_id, data in self.network_map.iteritems():
+        for network_id, data in six.iteritems(self.network_map):
             for port in data['ports']:
                 if port['port_mac'] == port_mac:
                     return port['port_id']
@@ -79,7 +78,7 @@ class EswitchManager(object):
         Check internal network map for port data.
         If port exists set port to Down
         """
-        for network_id, data in self.network_map.iteritems():
+        for network_id, data in six.iteritems(self.network_map):
             for port in data['ports']:
                 if port['port_mac'] == port_mac:
                     self.utils.port_down(physical_network, port_mac)
@@ -127,7 +126,7 @@ class EswitchManager(object):
 
     def port_release(self, port_mac):
         """Clear port configuration from eSwitch."""
-        for network_id, net_data in self.network_map.iteritems():
+        for network_id, net_data in six.iteritems(self.network_map):
             for port in net_data['ports']:
                 if port['port_mac'] == port_mac:
                     self.utils.port_release(net_data['physical_network'],
@@ -189,7 +188,7 @@ class MlnxEswitchNeutronAgent(object):
         self.agent_state = {
             'binary': 'neutron-mlnx-agent',
             'host': cfg.CONF.host,
-            'topic': q_constants.L2_AGENT_TOPIC,
+            'topic': constants.L2_AGENT_TOPIC,
             'configurations': configurations,
             'agent_type': mech_mlnx.AGENT_TYPE_MLNX,
             'start_flag': True}

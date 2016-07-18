@@ -39,8 +39,9 @@ class TestPciUtils(base.TestCase):
                               self.pci_utils.get_auto_pf, 'fabtype')
             LOG.error.assert_called_with(log_msg)
 
-    def _test_get_auto_pf(self, devices=[], is_vendor_pf=True,
+    def _test_get_auto_pf(self, devices=None, is_vendor_pf=True,
                           is_sriov=True, valid_fabric_type=True):
+        devices = devices if devices else []
         ifcs = devices if valid_fabric_type else []
         return contextlib.nested(
             mock.patch('ethtool.get_devices', return_value=devices),
