@@ -398,6 +398,7 @@ class MlnxEswitchNeutronAgent(object):
 
 
 def main():
+    config.config.register_root_helper(cfg.CONF)
     common_config.init(sys.argv[1:])
     common_config.setup_logging()
 
