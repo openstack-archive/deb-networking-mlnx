@@ -16,8 +16,8 @@
 GROUP_OPT = "sdn"
 
 # RESTful API paths:
-NETWORK_PATH = "Network"
-PORT_PATH = "Port"
+NETWORK = "Network"
+PORT = "Port"
 
 # HTTP request methods:
 DELETE = "DELETE"

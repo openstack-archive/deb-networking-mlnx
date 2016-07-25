@@ -262,7 +262,7 @@ class SDNDriverTestCase(base.BaseTestCase):
 
     def _test_bind_port(self, status_code, context, assert_called=True):
         method = getattr(self.mech, 'bind_port')
-        object_type = sdn_const.PORT_PATH
+        object_type = sdn_const.PORT
         url = (
             '%s/%s/%s' % (config.cfg.CONF.sdn.url,
                           config.cfg.CONF.sdn.domain,
@@ -280,7 +280,7 @@ class SDNDriverTestCase(base.BaseTestCase):
                 return_value=None)
     def test_create_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
-            self._test_create_resource_postcommit(sdn_const.NETWORK_PATH,
+            self._test_create_resource_postcommit(sdn_const.NETWORK,
                                                   status_code,
                                                   )
 
@@ -288,7 +288,7 @@ class SDNDriverTestCase(base.BaseTestCase):
                 return_value=None)
     def test_update_port_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
-            self._test_update_resource_postcommit(sdn_const.PORT_PATH,
+            self._test_update_resource_postcommit(sdn_const.PORT,
                                                   status_code,
                                                   )
 
@@ -296,7 +296,7 @@ class SDNDriverTestCase(base.BaseTestCase):
                 return_value=None)
     def test_update_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
-            self._test_update_resource_postcommit(sdn_const.NETWORK_PATH,
+            self._test_update_resource_postcommit(sdn_const.NETWORK,
                                                   status_code,
                                                   )
 
@@ -304,7 +304,7 @@ class SDNDriverTestCase(base.BaseTestCase):
                 return_value=None)
     def test_delete_network_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
-            self._test_delete_resource_postcommit(sdn_const.NETWORK_PATH,
+            self._test_delete_resource_postcommit(sdn_const.NETWORK,
                                                   status_code,
                                                   )
 
@@ -312,7 +312,7 @@ class SDNDriverTestCase(base.BaseTestCase):
                 return_value=None)
     def test_delete_port_postcommit(self, *args):
         for status_code in self._get_http_request_codes():
-            self._test_delete_resource_postcommit(sdn_const.PORT_PATH,
+            self._test_delete_resource_postcommit(sdn_const.PORT,
                                                   status_code,
                                                   )
 
