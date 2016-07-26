@@ -24,34 +24,13 @@ from oslo_serialization import jsonutils
 import requests
 
 from networking_mlnx._i18n import _LE
+from networking_mlnx.plugins.ml2.drivers.sdn import config
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 from networking_mlnx.plugins.ml2.drivers.sdn import exceptions as sdn_exc
 
 LOG = log.getLogger(__name__)
 
-sdn_opts = [
-        cfg.StrOpt('url',
-                   help=_("HTTP URL of SDN Provider."),
-                   ),
-        cfg.StrOpt('domain',
-                   help=_("Cloud domain name in SDN provider "
-                          "(for example: cloudx)"),
-                   default='cloudx'
-                   ),
-        cfg.StrOpt('username',
-                   help=_("HTTP username for authentication."),
-                   ),
-        cfg.StrOpt('password',
-                   help=_("HTTP password for authentication."),
-                   secret=True
-                   ),
-        cfg.IntOpt('timeout',
-                   help=_("HTTP timeout in seconds."),
-                   default=10
-                   ),
-]
-
-cfg.CONF.register_opts(sdn_opts, sdn_const.GROUP_OPT)
+cfg.CONF.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
 NETWORK_QOS_POLICY = 'network_qos_policy'
 
 
@@ -132,7 +111,6 @@ class SDNMechanismDriver(api.MechanismDriver):
         self.username = cfg.CONF.sdn.username
         self.password = cfg.CONF.sdn.password
         self.timeout = cfg.CONF.sdn.timeout
-        self.session_start = 0
         self._validate_mandatory_params_exist()
 
     @context_validator(sdn_const.NETWORK)
