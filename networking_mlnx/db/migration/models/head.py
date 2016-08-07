@@ -1,4 +1,5 @@
-# Copyright 2015 Mellanox Technologies, Ltd
+# Copyright 2016 Mellanox Technologies, Ltd
+# All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,27 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# Config file groups name
-GROUP_OPT = "sdn"
+from neutron.db.migration.models import head
 
-# RESTful API paths:
-NETWORK = "Network"
-PORT = "Port"
+from networking_mlnx.db.models import sdn_journal_db  # noqa
 
-# HTTP request methods:
-DELETE = "DELETE"
-POST = "POST"
-PUT = "PUT"
 
-# HTTP headers
-LOGIN_HTTP_HEADER = {'content-type': 'application/x-www-form-urlencoded'}
-JSON_HTTP_HEADER = {"Content-Type": "application/json"}
-
-# Port device owner
-PORT_DEVICE_OWNER_COMPUTE = 'compute:'
-
-# Constants for journal operation states
-PENDING = 'pending'
-PROCESSING = 'processing'
-FAILED = 'failed'
-COMPLETED = 'completed'
+def get_metadata():
+    return head.model_base.BASEV2.metadata
