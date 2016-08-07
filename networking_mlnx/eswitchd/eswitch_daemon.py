@@ -17,7 +17,7 @@
 import sys
 import zmq
 
-from networking_mlnx._i18n import _LE, _LI
+from networking_mlnx._i18n import _, _LE, _LI
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -58,7 +58,7 @@ class MlxEswitchDaemon(object):
                     raise
             else:
                 LOG.error(_LE("Cannot parse Fabric Mappings"))
-                raise Exception("Cannot parse Fabric Mappings")
+                raise Exception(_("Cannot parse Fabric Mappings"))
         return fabrics
 
     def _init_connections(self):
