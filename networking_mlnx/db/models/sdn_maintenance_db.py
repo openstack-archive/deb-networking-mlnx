@@ -13,11 +13,19 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.db.migration.models import head
+from neutron.db import model_base
+from neutron.db.models_v2 import HasId
+import sqlalchemy as sa
 
-from networking_mlnx.db.models import sdn_journal_db  # noqa
-from networking_mlnx.db.models import sdn_maintenance_db  # noqa
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 
-def get_metadata():
-    return head.model_base.BASEV2.metadata
+class SdnMaintenance(model_base.BASEV2, HasId):
+    __tablename__ = 'sdn_maintenance'
+
+    state = sa.Column(sa.Enum(sdn_const.PENDING, sdn_const.PROCESSING),
+                      nullable=False)
+    processing_operation = sa.Column(sa.String(70))
+    lock_updated = sa.Column(sa.TIMESTAMP, nullable=False,
+                             server_default=sa.func.now(),
+                             onupdate=sa.func.now())

@@ -21,6 +21,7 @@ from sqlalchemy import func
 from sqlalchemy import or_
 
 from networking_mlnx.db.models import sdn_journal_db
+from networking_mlnx.db.models import sdn_maintenance_db
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 
@@ -42,7 +43,7 @@ def check_for_pending_delete_ops_with_parent(session, object_type, parent_id):
         or_(sdn_journal_db.SdnJournal.state == sdn_const.PENDING,
             sdn_journal_db.SdnJournal.state == sdn_const.PROCESSING),
         sdn_journal_db.SdnJournal.object_type == object_type,
-        sdn_journal_db.SdnJournal.operation == sdn_const.ODL_DELETE
+        sdn_journal_db.SdnJournal.operation == sdn_const.DELETE
     ).all()
 
     for row in rows:
@@ -56,8 +57,7 @@ def check_for_pending_or_processing_add(session, router_id, subnet_id):
     rows = session.query(sdn_journal_db.SdnJournal).filter(
         or_(sdn_journal_db.SdnJournal.state == sdn_const.PENDING,
             sdn_journal_db.SdnJournal.state == sdn_const.PROCESSING),
-        sdn_journal_db.SdnJournal.object_type == sdn_const.ODL_ROUTER_INTF,
-        sdn_journal_db.SdnJournal.operation == sdn_const.ODL_ADD
+        sdn_journal_db.SdnJournal.operation == sdn_const.POST
     ).all()
 
     for row in rows:
@@ -156,6 +156,43 @@ def delete_pending_rows(session, operations_to_delete):
             sdn_journal_db.SdnJournal.state == sdn_const.PENDING).delete(
             synchronize_session=False)
         session.expire_all()
+
+
+@db_api.retry_db_errors
+def _update_maintenance_state(session, expected_state, state):
+    with session.begin():
+        row = session.query(sdn_maintenance_db.SdnMaintenance).filter_by(
+            state=expected_state).with_for_update().one_or_none()
+        if row is None:
+            return False
+
+        row.state = state
+        return True
+
+
+def lock_maintenance(session):
+    return _update_maintenance_state(session, sdn_const.PENDING,
+                                     sdn_const.PROCESSING)
+
+
+def unlock_maintenance(session):
+    return _update_maintenance_state(session, sdn_const.PROCESSING,
+                                     sdn_const.PENDING)
+
+
+def update_maintenance_operation(session, operation=None):
+    """Update the current maintenance operation details.
+
+    The function assumes the lock is held, so it mustn't be run outside of a
+    locked context.
+    """
+    op_text = None
+    if operation:
+        op_text = operation.__name__
+
+    with session.begin():
+        row = session.query(sdn_maintenance_db.SdnMaintenance).one_or_none()
+        row.processing_operation = op_text
 
 
 def delete_rows_by_state_and_time(session, state, time_delta):
