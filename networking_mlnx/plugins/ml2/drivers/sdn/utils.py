@@ -1,4 +1,4 @@
-# Copyright 2015 Mellanox Technologies, Ltd
+# Copyright 2016 Mellanox Technologies, Ltd
 #
 #    Licensed under the Apache License, Version 2.0 (the "License"); you may
 #    not use this file except in compliance with the License. You may obtain
@@ -12,12 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.common import exceptions as exc
 
-
-class SDNConnectionError(exc.NeutronException):
-    message = _("Failed to send request %(msg)s")
-
-
-class SDNLoginError(exc.NeutronException):
-    message = _("Failed login to URL: %(login_url)s %(msg)s")
+def strings_to_url(*args):
+    return "/".join(filter(None, args))
