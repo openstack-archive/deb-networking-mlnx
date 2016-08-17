@@ -14,6 +14,8 @@
 
 from oslo_config import cfg
 
+from networking_mlnx._i18n import _
+
 sdn_opts = [
         cfg.StrOpt('url',
                    help=_("HTTP URL of SDN Provider."),

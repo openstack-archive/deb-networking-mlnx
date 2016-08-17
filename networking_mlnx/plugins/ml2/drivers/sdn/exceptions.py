@@ -12,7 +12,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.common import exceptions as exc
+from neutron_lib import exceptions as exc
+
+from networking_mlnx._i18n import _
 
 
 class SDNConnectionError(exc.NeutronException):
