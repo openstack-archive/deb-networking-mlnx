@@ -22,6 +22,7 @@ Create Date: 2016-08-07 10:57:15.895551
 from alembic import op
 import sqlalchemy as sa
 
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 # revision identifiers, used by Alembic.
 revision = '9f30890cfbd1'
@@ -38,9 +39,10 @@ def upgrade():
         sa.Column('data', sa.PickleType(), nullable=True),
         sa.Column('job_id', sa.String(length=36), nullable=True),
         sa.Column('state',
-                  sa.Enum('pending', 'failed', 'processing', 'completed',
+                  sa.Enum(sdn_const.PENDING, sdn_const.FAILED,
+                          sdn_const.PROCESSING, sdn_const.COMPLETED,
                           name='state'),
-                  nullable=False, default='pending'),
+                  nullable=False, default=sdn_const.PENDING),
         sa.Column('retry_count', sa.Integer, default=0),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
         sa.Column('last_retried', sa.TIMESTAMP, server_default=sa.func.now(),
