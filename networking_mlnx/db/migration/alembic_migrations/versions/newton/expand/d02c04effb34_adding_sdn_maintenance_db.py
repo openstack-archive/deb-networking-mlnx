@@ -23,6 +23,8 @@ from alembic import op
 from oslo_utils import uuidutils
 import sqlalchemy as sa
 
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
+
 # revision identifiers, used by Alembic.
 revision = 'd02c04effb34'
 down_revision = '9f30890cfbd1'
@@ -32,7 +34,8 @@ def upgrade():
     maint_table = op.create_table(
         'sdn_maintenance',
         sa.Column('id', sa.String(length=36), nullable=False),
-        sa.Column('state', sa.Enum('pending', 'processing', name='state'),
+        sa.Column('state', sa.Enum(sdn_const.PENDING, sdn_const.PROCESSING,
+                                   name='state'),
                   nullable=False),
         sa.Column('processing_operation', sa.String(70)),
         sa.Column('lock_updated', sa.TIMESTAMP, nullable=False,
@@ -43,4 +46,4 @@ def upgrade():
     # different Neutron processes.
     op.bulk_insert(maint_table,
                    [{'id': uuidutils.generate_uuid(),
-                     'state': 'pending'}])
+                     'state': sdn_const.PENDING}])
