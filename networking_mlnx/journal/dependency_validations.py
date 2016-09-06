@@ -13,6 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_serialization import jsonutils
+
 from networking_mlnx.db import db
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
@@ -43,7 +45,7 @@ def validate_network_operation(session, row):
                                        sdn_const.POST]):
             return False
         if db.check_for_pending_delete_ops_with_parent(
-            session, sdn_const.ODL_PORT, row.object_uuid):
+            session, sdn_const.PORT, row.object_uuid):
             return False
     elif (row.operation == sdn_const.PUT and
             not _is_valid_update_operation(session, row)):
@@ -58,15 +60,10 @@ def validate_port_operation(session, row):
     are still in 'pending' or 'processing' state. e.g.
     """
     if row.operation in (sdn_const.POST, sdn_const.PUT):
-        network_id = row.data['network_id']
+        network_dict = jsonutils.loads(row.data)
+        network_id = network_dict['network_id']
         # Check for pending or processing network operations
         ops = db.check_for_pending_or_processing_ops(session, network_id)
-        # Check for pending subnet operations.
-        for fixed_ip in row.data['fixed_ips']:
-            ip_ops = db.check_for_pending_or_processing_ops(
-                session, fixed_ip['subnet_id'])
-            ops = ops or ip_ops
-
         if ops:
             return False
         if (row.operation == sdn_const.PUT and
