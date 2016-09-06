@@ -13,14 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.db import model_base
-from neutron.db.models_v2 import HasId
+from neutron_lib.db import model_base
 import sqlalchemy as sa
 
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 
-class SdnMaintenance(model_base.BASEV2, HasId):
+class SdnMaintenance(model_base.BASEV2, model_base.HasId):
     __tablename__ = 'sdn_maintenance'
 
     state = sa.Column(sa.Enum(sdn_const.PENDING, sdn_const.PROCESSING),
