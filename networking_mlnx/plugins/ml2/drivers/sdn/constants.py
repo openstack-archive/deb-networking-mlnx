@@ -34,5 +34,6 @@ PORT_DEVICE_OWNER_COMPUTE = 'compute:'
 # Constants for journal operation states
 PENDING = 'pending'
 PROCESSING = 'processing'
+MONITORING = 'monitoring'
 FAILED = 'failed'
 COMPLETED = 'completed'

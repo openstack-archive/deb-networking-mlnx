@@ -25,10 +25,11 @@ class SdnJournal(model_base.BASEV2, model_base.HasId):
     object_type = sa.Column(sa.String(36), nullable=False)
     object_uuid = sa.Column(sa.String(36), nullable=False)
     operation = sa.Column(sa.String(36), nullable=False)
-    data = sa.Column(sa.PickleType, nullable=True)
+    data = sa.Column(sa.Text, nullable=True)
     job_id = sa.Column(sa.String(36), nullable=True)
     state = sa.Column(sa.Enum(sdn_const.PENDING, sdn_const.FAILED,
-                              sdn_const.PROCESSING, sdn_const.COMPLETED),
+                              sdn_const.PROCESSING, sdn_const.MONITORING,
+                              sdn_const.COMPLETED),
                       nullable=False, default=sdn_const.PENDING)
     retry_count = sa.Column(sa.Integer, default=0)
     created_at = sa.Column(sa.DateTime, server_default=sa.func.now())

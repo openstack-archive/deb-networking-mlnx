@@ -16,6 +16,7 @@ import datetime
 
 from neutron.db import api as db_api
 from oslo_db import api as oslo_db_api
+from oslo_serialization import jsonutils
 from sqlalchemy import asc
 from sqlalchemy import func
 from sqlalchemy import or_
@@ -48,20 +49,6 @@ def check_for_pending_delete_ops_with_parent(session, object_type, parent_id):
 
     for row in rows:
         if parent_id in row.data:
-            return True
-
-    return False
-
-
-def check_for_pending_or_processing_add(session, router_id, subnet_id):
-    rows = session.query(sdn_journal_db.SdnJournal).filter(
-        or_(sdn_journal_db.SdnJournal.state == sdn_const.PENDING,
-            sdn_journal_db.SdnJournal.state == sdn_const.PROCESSING),
-        sdn_journal_db.SdnJournal.operation == sdn_const.POST
-    ).all()
-
-    for row in rows:
-        if router_id in row.data.values() and subnet_id in row.data.values():
             return True
 
     return False
@@ -104,9 +91,25 @@ def get_oldest_pending_db_row_with_lock(session):
     return row
 
 
+@db_api.retry_db_errors
+def get_all_monitoring_db_row_by_oldest(session):
+    with session.begin():
+        rows = session.query(sdn_journal_db.SdnJournal).filter_by(
+            state=sdn_const.MONITORING).order_by(
+            asc(sdn_journal_db.SdnJournal.last_retried)).all()
+    return rows
+
+
 @oslo_db_api.wrap_db_retry(max_retries=db_api.MAX_RETRIES)
 def update_db_row_state(session, row, state):
     row.state = state
+    session.merge(row)
+    session.flush()
+
+
+@oslo_db_api.wrap_db_retry(max_retries=db_api.MAX_RETRIES)
+def update_db_row_job_id(session, row, job_id):
+    row.job_id = job_id
     session.merge(row)
     session.flush()
 
@@ -134,6 +137,7 @@ def delete_row(session, row=None, row_id=None):
 @oslo_db_api.wrap_db_retry(max_retries=db_api.MAX_RETRIES)
 def create_pending_row(session, object_type, object_uuid,
                        operation, data):
+    data = jsonutils.dumps(data)
     row = sdn_journal_db.SdnJournal(object_type=object_type,
                                     object_uuid=object_uuid,
                                     operation=operation, data=data,
@@ -143,16 +147,6 @@ def create_pending_row(session, object_type, object_uuid,
     # Keep session flush for unit tests. NOOP for L2/L3 events since calls are
     # made inside database session transaction with subtransactions=True.
     session.flush()
-
-
-@db_api.retry_db_errors
-def delete_pending_rows(session, operations_to_delete):
-    with session.begin():
-        session.query(sdn_journal_db.SdnJournal).filter(
-            sdn_journal_db.SdnJournal.operation.in_(operations_to_delete),
-            sdn_journal_db.SdnJournal.state == sdn_const.PENDING).delete(
-            synchronize_session=False)
-        session.expire_all()
 
 
 @db_api.retry_db_errors

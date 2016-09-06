@@ -130,6 +130,9 @@ class DbTestCase(testlib_api.SqlTestCaseLight):
     def test_get_oldest_pending_row_none_when_row_completed(self):
         self._test_get_oldest_pending_row_none(sdn_const.COMPLETED)
 
+    def test_get_oldest_pending_row_none_when_row_monitoring(self):
+        self._test_get_oldest_pending_row_none(sdn_const.MONITORING)
+
     def test_get_oldest_pending_row(self):
         db.create_pending_row(self.db_session, *self.UPDATE_ROW)
         row = db.get_oldest_pending_db_row_with_lock(self.db_session)
@@ -145,6 +148,21 @@ class DbTestCase(testlib_api.SqlTestCaseLight):
         db.create_pending_row(self.db_session, *self.UPDATE_ROW)
         row = db.get_oldest_pending_db_row_with_lock(self.db_session)
         self.assertEqual(older_row, row)
+
+    def test_get_all_monitoring_db_row_by_oldest_order(self):
+        db.create_pending_row(self.db_session, *self.UPDATE_ROW)
+        db.create_pending_row(self.db_session, *self.UPDATE_ROW)
+        older_row = db.get_all_db_rows(self.db_session)[1]
+        older_row.last_retried -= timedelta(minutes=1)
+        older_row.state = sdn_const.MONITORING
+        self._update_row(older_row)
+        newer_row = db.get_all_db_rows(self.db_session)[0]
+        newer_row.state = sdn_const.MONITORING
+        self._update_row(newer_row)
+
+        rows = db.get_all_monitoring_db_row_by_oldest(self.db_session)
+        self.assertEqual(older_row, rows[0])
+        self.assertEqual(newer_row, rows[1])
 
     def test_get_oldest_pending_row_when_deadlock(self):
         db.create_pending_row(self.db_session, *self.UPDATE_ROW)
@@ -201,8 +219,20 @@ class DbTestCase(testlib_api.SqlTestCaseLight):
     def test_update_row_state_to_failed(self):
         self._test_update_row_state(sdn_const.PROCESSING, sdn_const.FAILED)
 
+    def test_update_row_state_to_monitoring(self):
+        self._test_update_row_state(sdn_const.PROCESSING, sdn_const.MONITORING)
+
     def test_update_row_state_to_completed(self):
         self._test_update_row_state(sdn_const.PROCESSING, sdn_const.COMPLETED)
+
+    def test_update_row_job_id(self):
+        # add new pending row
+        expected_job_id = 'job_id'
+        db.create_pending_row(self.db_session, *self.UPDATE_ROW)
+        row = db.get_all_db_rows(self.db_session)[0]
+        db.update_db_row_job_id(self.db_session, row, expected_job_id)
+        row = db.get_all_db_rows(self.db_session)[0]
+        self.assertEqual(expected_job_id, row.job_id)
 
     def _test_maintenance_lock_unlock(self, db_func, existing_state,
                                       expected_state, expected_result):
