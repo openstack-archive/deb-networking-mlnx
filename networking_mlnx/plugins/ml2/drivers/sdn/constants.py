@@ -23,6 +23,7 @@ PORT = "Port"
 DELETE = "DELETE"
 POST = "POST"
 PUT = "PUT"
+GET = "GET"
 
 # HTTP headers
 LOGIN_HTTP_HEADER = {'content-type': 'application/x-www-form-urlencoded'}
