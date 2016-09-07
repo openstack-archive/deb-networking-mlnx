@@ -29,7 +29,7 @@ cfg.CONF.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
 
 class SdnRestClient(object):
 
-    MANDATORY_ARGS = ("url", "username", "password")
+    MANDATORY_ARGS = ('url', 'username', 'password')
 
     @classmethod
     def create_client(cls):
@@ -52,7 +52,8 @@ class SdnRestClient(object):
     def _validate_mandatory_params_exist(self):
         for arg in self.MANDATORY_ARGS:
             if not getattr(self, arg):
-                raise cfg.RequiredOptError(sdn_const.GROUP_OPT)
+                raise cfg.RequiredOptError(
+                    arg, cfg.OptGroup(sdn_const.GROUP_OPT))
 
     def _get_session(self):
         login_url = sdn_utils.strings_to_url(str(self.url), "login")
@@ -71,42 +72,48 @@ class SdnRestClient(object):
             raise sdn_exc.SDNLoginError(login_url=login_url, msg=e)
         return session
 
+    def get(self, urlpath='', data=None):
+        urlpath = sdn_utils.strings_to_url(self.url, urlpath)
+        return self.request(sdn_const.GET, urlpath, data)
+
     def put(self, urlpath='', data=None):
+        urlpath = sdn_utils.strings_to_url(self.url, self.domain, urlpath)
         return self.request(sdn_const.PUT, urlpath, data)
 
     def post(self, urlpath='', data=None):
+        urlpath = sdn_utils.strings_to_url(self.url, self.domain, urlpath)
         return self.request(sdn_const.POST, urlpath, data)
 
     def delete(self, urlpath='', data=None):
+        urlpath = sdn_utils.strings_to_url(self.url, self.domain, urlpath)
         return self.request(sdn_const.DELETE, urlpath, data)
 
     def request(self, method, urlpath='', data=None):
-        dest_url = sdn_utils.strings_to_url(self.url, self.domain, urlpath)
         data = jsonutils.dumps(data, indent=2) if data else None
         session = self._get_session()
 
         LOG.debug("Sending METHOD %(method)s URL %(url)s JSON %(data)s",
-                  {'method': method, 'url': dest_url, 'data': data})
+                  {'method': method, 'url': urlpath, 'data': data})
         return self._check_rensponse(session.request(
-                method, url=dest_url, headers=sdn_const.JSON_HTTP_HEADER,
+                method, url=str(urlpath), headers=sdn_const.JSON_HTTP_HEADER,
                 data=data, timeout=self.timeout))
 
     def try_delete(self, urlpath):
-        rensponse = self.delete(urlpath)
-        if rensponse.status_code == requests.codes.not_found:
+        response = self.delete(urlpath)
+        if response.status_code == requests.codes.not_found:
             # The resource is already removed. ignore 404 gracefully
             LOG.debug("%(urlpath)s doesn't exist", {'urlpath': urlpath})
             return False
-        self._check_rensponse(rensponse)
+        self._check_rensponse(response)
         return True
 
-    def _check_rensponse(self, rensponse):
+    def _check_rensponse(self, response):
         try:
-            LOG.debug("request status: %d", rensponse.status_code)
-            if rensponse.text:
-                LOG.debug("request text: %s", rensponse.text)
-            if rensponse.status_code != requests.codes.not_implemented:
-                rensponse.raise_for_status()
+            LOG.debug("request status: %d", response.status_code)
+            if response.text:
+                LOG.debug("request text: %s", response.text)
+            if response.status_code != requests.codes.not_implemented:
+                response.raise_for_status()
         except Exception as e:
             raise sdn_exc.SDNConnectionError(msg=e)
-        return rensponse
+        return response
