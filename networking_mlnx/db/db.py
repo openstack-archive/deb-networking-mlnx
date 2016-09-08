@@ -115,7 +115,7 @@ def update_db_row_job_id(session, row, job_id):
 
 
 def update_pending_db_row_retry(session, row, retry_count):
-    if row.retry_count >= retry_count:
+    if row.retry_count >= retry_count and row.retry_count != -1:
         update_db_row_state(session, row, sdn_const.FAILED)
     else:
         row.retry_count += 1

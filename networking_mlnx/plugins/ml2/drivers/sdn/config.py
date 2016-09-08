@@ -36,4 +36,22 @@ sdn_opts = [
                    help=_("HTTP timeout in seconds."),
                    default=10
                    ),
+        cfg.IntOpt('sync_timeout', default=10,
+                   help=_("Sync thread timeout in seconds.")),
+        cfg.IntOpt('retry_count', default=-1,
+                   help=_("Number of times to retry a row "
+                          "before failing."
+                          "To disable retry count value should be -1")),
+        cfg.IntOpt('maintenance_interval', default=300,
+                   help=_("Journal maintenance operations interval "
+                          "in seconds.")),
+        cfg.IntOpt('completed_rows_retention', default=600,
+                   help=_("Time to keep completed rows in seconds."
+                          "Completed rows retention will be checked every "
+                          "maintenance_interval by the cleanup thread."
+                          "To disable completed rows deletion "
+                          "value should be -1")),
+        cfg.IntOpt('processing_timeout', default='100',
+                   help=_("Time in seconds to wait before a "
+                          "processing row is marked back to pending.")),
 ]
