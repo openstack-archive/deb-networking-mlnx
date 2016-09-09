@@ -168,7 +168,7 @@ class SdnJournalThread(object):
                     else:
                         LOG.warning(_LW("object %s has join id is NULL"),
                                     row.object_uuid)
-            except sdn_exc.SDNConnectionError:
+            except sdn_exc.SDNConnectionError and sdn_exc.SDNLoginError:
                 # Don't raise the retry count, just log an error
                 LOG.error(_LE("Cannot connect to the NEO Controller"))
                 db.update_pending_db_row_retry(session, row,
@@ -222,7 +222,7 @@ class SdnJournalThread(object):
                               {'job_id': row.job_id, 'status': job_status})
                     db.update_db_row_state(session, row, sdn_const.PENDING)
 
-            except sdn_exc.SDNConnectionError:
+            except sdn_exc.SDNConnectionError and sdn_exc.SDNLoginError:
                 # Don't raise the retry count, just log an error
                 LOG.error(_LE("Cannot connect to the NEO Controller"))
                 db.update_db_row_state(session, row, sdn_const.PENDING)
