@@ -1,10 +1,14 @@
-networking-mlnx (1:8.0.0~b3-5) UNRELEASED; urgency=medium
+networking-mlnx (1:8.0.0~b3-5ubuntu1) UNRELEASED; urgency=medium
 
+  [ Ondřej Nový ]
   * Standards-Version is 3.9.8 now (no change)
   * d/rules: Removed UPSTREAM_GIT with default value
   * d/copyright: Changed source URL to https protocol
 
- -- Ondřej Nový <novy@ondrej.org>  Sat, 09 Apr 2016 19:24:03 +0200
+  * Added missing dependencies python-zmq, python-ethtool
+
+
+ -- Lenny Verkhovsky <lennyb@mellanox.com>  Tue, 20 Sep 2016 14:23:44 +0000
 
 networking-mlnx (1:8.0.0~b3-4) unstable; urgency=medium
 
