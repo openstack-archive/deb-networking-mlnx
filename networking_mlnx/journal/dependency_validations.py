@@ -63,7 +63,8 @@ def validate_port_operation(session, row):
         network_dict = jsonutils.loads(row.data)
         network_id = network_dict['network_id']
         # Check for pending or processing network operations
-        ops = db.check_for_pending_or_processing_ops(session, network_id)
+        ops = db.check_for_pending_or_processing_ops(
+            session, network_id, [sdn_const.POST])
         if ops:
             return False
         if (row.operation == sdn_const.PUT and
