@@ -103,10 +103,11 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def create_network_precommit(self, context):
         network_dic = context.current
-        network_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, network_dic['id']))
-        SDNMechanismDriver._record_in_journal(
-            context, sdn_const.NETWORK, sdn_const.POST, network_dic)
+        if network_dic.get('provider:segmentation_id'):
+            network_dic[NETWORK_QOS_POLICY] = (
+                self._get_network_qos_policy(context, network_dic['id']))
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.NETWORK, sdn_const.POST, network_dic)
 
     @context_validator()
     @error_handler
