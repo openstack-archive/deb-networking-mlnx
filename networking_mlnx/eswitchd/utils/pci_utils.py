@@ -18,11 +18,12 @@ import re
 import sys
 
 import ethtool
-from networking_mlnx._i18n import _LE, _LW
+from oslo_concurrency import processutils
 from oslo_log import log as logging
 
+from networking_mlnx._i18n import _LE, _LW
 from networking_mlnx.eswitchd.common import constants
-from networking_mlnx.eswitchd.utils.command_utils import execute
+from networking_mlnx.eswitchd.utils import command_utils
 
 LOG = logging.getLogger(__name__)
 
@@ -99,14 +100,14 @@ class pciUtils(object):
     def get_interface_type(self, ifc):
         cmd = ['ip', '-o', 'link', 'show', 'dev', ifc]
         try:
-            result = execute(cmd, root_helper=None)
-        except Exception as e:
+            out, err = command_utils.execute(*cmd)
+        except (processutils.ProcessExecutionError, OSError) as e:
             LOG.warning(_LW("Failed to execute command %(cmd)s due to %(e)s"),
                     {"cmd": cmd, "e": e})
             raise
-        if result.find('link/ether') != -1:
+        if out.find('link/ether') != -1:
             return 'eth'
-        elif result.find('link/infiniband') != -1:
+        elif out.find('link/infiniband') != -1:
             return 'ib'
         else:
             return None

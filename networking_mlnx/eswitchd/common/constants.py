@@ -42,8 +42,6 @@ CX4_GUID_POLICY_PATH = ('/sys/class/infiniband/%(module)s/device/sriov/'
 INVALID_GUID_CX3 = 'ffffffffffffffff'
 INVALID_GUID_CX4 = 'ff:ff:ff:ff:ff:ff:ff:ff'
 
-IFCS_PATH = '/sys/class/net/*'
-
 CONN_URL = '%(transport)s://%(addr)s:%(port)s'
 
 CX3_VF_DEVICE_TYPE_LIST = ('0x1004', )
