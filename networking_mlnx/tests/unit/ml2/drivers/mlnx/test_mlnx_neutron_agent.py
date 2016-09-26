@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import contextlib
-
 import mock
+from neutron.tests import base
 from oslo_config import cfg
 import testtools
 
@@ -23,7 +22,6 @@ from networking_mlnx.plugins.ml2.drivers.mlnx.agent import (
     mlnx_eswitch_neutron_agent)
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import utils
-from neutron.tests import base
 
 
 class TestEswichManager(base.BaseTestCase):
@@ -70,7 +68,7 @@ class TestEswitchAgent(base.BaseTestCase):
     def setUp(self):
         super(TestEswitchAgent, self).setUp()
         cfg.CONF.set_default('firewall_driver',
-                             'neutron.agent.firewall.NoopFirewallDriver',
+                             'noop',
                              group='SECURITYGROUP')
 
         class MockFixedIntervalLoopingCall(object):
@@ -96,11 +94,10 @@ class TestEswitchAgent(base.BaseTestCase):
     def test_treat_devices_added_returns_true_for_missing_device(self):
         attrs = {'get_devices_details_list.side_effect': Exception()}
         self.agent.plugin_rpc.configure_mock(**attrs)
-        with contextlib.nested(
-            mock.patch('networking_mlnx.plugins.ml2.drivers.mlnx.agent.'
-                       'mlnx_eswitch_neutron_agent.EswitchManager.'
-                       'get_vnics_mac',
-                       return_value=[])):
+        with mock.patch('networking_mlnx.plugins.ml2.drivers.mlnx.agent.'
+                        'mlnx_eswitch_neutron_agent.EswitchManager.'
+                        'get_vnics_mac',
+                        return_value=[]):
             self.assertTrue(self.agent.treat_devices_added_or_updated([{}]))
 
     def _mock_treat_devices_added_updated(self, details, func_name):
@@ -110,17 +107,16 @@ class TestEswitchAgent(base.BaseTestCase):
         :param func_name: the function that should be called
         :returns: whether the named function was called
         """
-        with contextlib.nested(
-            mock.patch('networking_mlnx.plugins.ml2.drivers.mlnx.agent.'
-                       'mlnx_eswitch_neutron_agent.EswitchManager.'
-                       'get_vnics_mac',
-                       return_value=[]),
+
+        with mock.patch('networking_mlnx.plugins.ml2.drivers.mlnx.agent.'
+                        'mlnx_eswitch_neutron_agent.EswitchManager.'
+                        'get_vnics_mac',
+                        return_value=[]),\
             mock.patch.object(self.agent.plugin_rpc,
                               'get_devices_details_list',
-                              return_value=[details]),
-            mock.patch.object(self.agent.plugin_rpc, 'update_device_up'),
-            mock.patch.object(self.agent, func_name)
-        ) as (vnics_fn, get_dev_fn, upd_dev_up, func):
+                              return_value=[details]),\
+            mock.patch.object(self.agent.plugin_rpc, 'update_device_up') as upd_dev_up,\
+            mock.patch.object(self.agent, func_name) as func:
             self.assertFalse(self.agent.treat_devices_added_or_updated([{}]))
         return (func.called, upd_dev_up.called)
 
@@ -160,12 +156,11 @@ class TestEswitchAgent(base.BaseTestCase):
                 self.assertTrue(port_release.called)
 
     def _test_process_network_ports(self, port_info):
-        with contextlib.nested(
-            mock.patch.object(self.agent, 'treat_devices_added_or_updated',
-                              return_value=False),
+        with mock.patch.object(self.agent,
+                               'treat_devices_added_or_updated',
+                               return_value=False) as device_added_updated,\
             mock.patch.object(self.agent, 'treat_devices_removed',
-                              return_value=False)
-        ) as (device_added_updated, device_removed):
+                              return_value=False) as device_removed:
             self.assertFalse(self.agent.process_network_ports(port_info))
             device_added_updated.assert_called_once_with(
                 port_info['added'] | port_info['updated'])

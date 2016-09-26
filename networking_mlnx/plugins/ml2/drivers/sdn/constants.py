@@ -16,13 +16,14 @@
 GROUP_OPT = "sdn"
 
 # RESTful API paths:
-NETWORK_PATH = "Network"
-PORT_PATH = "Port"
+NETWORK = "Network"
+PORT = "Port"
 
 # HTTP request methods:
 DELETE = "DELETE"
 POST = "POST"
 PUT = "PUT"
+GET = "GET"
 
 # HTTP headers
 LOGIN_HTTP_HEADER = {'content-type': 'application/x-www-form-urlencoded'}
@@ -30,3 +31,10 @@ JSON_HTTP_HEADER = {"Content-Type": "application/json"}
 
 # Port device owner
 PORT_DEVICE_OWNER_COMPUTE = 'compute:'
+
+# Constants for journal operation states
+PENDING = 'pending'
+PROCESSING = 'processing'
+MONITORING = 'monitoring'
+FAILED = 'failed'
+COMPLETED = 'completed'

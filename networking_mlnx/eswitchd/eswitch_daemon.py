@@ -17,7 +17,7 @@
 import sys
 import zmq
 
-from networking_mlnx._i18n import _LE, _LI
+from networking_mlnx._i18n import _, _LE, _LI
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
@@ -50,7 +50,7 @@ class MlxEswitchDaemon(object):
                 try:
                     fabric, pf = entry.split(':')
                     fabrics.append((fabric, pf))
-                except ValueError as ex:
+                except ValueError:
                     LOG.error(_LE("Invalid fabric: "
                                 "'%(entry)s' - "
                                 "Service terminated!"),
@@ -58,7 +58,7 @@ class MlxEswitchDaemon(object):
                     raise
             else:
                 LOG.error(_LE("Cannot parse Fabric Mappings"))
-                raise Exception("Cannot parse Fabric Mappings")
+                raise Exception(_("Cannot parse Fabric Mappings"))
         return fabrics
 
     def _init_connections(self):
@@ -87,7 +87,7 @@ class MlxEswitchDaemon(object):
                 result = self.dispatcher.handle_msg(data)
                 msg = jsonutils.dumps(result)
             except Exception as e:
-                LOG.exception(_LE("exception during message handling - %s"), e)
+                LOG.exception(_LE("Exception during message handling - %s"), e)
                 msg = str(e)
             sender.send(msg)
 

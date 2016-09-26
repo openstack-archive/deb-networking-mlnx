@@ -24,9 +24,6 @@ class DeviceDB(object):
     def __init__(self):
         self.device_db = {}
 
-    def get_pf(self, fabric):
-        return self.device_db[fabric]['pf']
-
     def add_fabric(self, fabric, pf, pci_id, hca_port, fabric_type,
                    pf_mlx_dev):
         details = {}

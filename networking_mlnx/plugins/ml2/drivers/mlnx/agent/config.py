@@ -16,6 +16,8 @@
 from neutron.agent.common import config
 from oslo_config import cfg
 
+from networking_mlnx._i18n import _
+
 
 DEFAULT_INTERFACE_MAPPINGS = []
 

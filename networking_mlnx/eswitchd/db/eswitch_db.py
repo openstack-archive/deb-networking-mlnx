@@ -38,12 +38,6 @@ class eSwitchDB(object):
         self.port_table[port_name]['state'] = constants.VPORT_STATE_ATTACHED
         LOG.info(_LI("port table:"), self.port_table)
 
-    def get_ports(self):
-        return self.port_table
-
-    def get_port_type(self, dev):
-        return self.port_table[dev]['type']
-
     def get_port_state(self, dev):
         state = None
         dev = self.port_table.get(dev)
@@ -60,9 +54,6 @@ class eSwitchDB(object):
                 device_id = self.port_policy[vnic_mac]['device_id']
                 vnics[vnic_mac] = {'mac': vnic_mac, 'device_id': device_id}
         return vnics
-
-    def get_port_policy(self):
-        return self.port_policy
 
     def get_port_policy_matrix(self):
         table_matrix = [['VNIC_MAC', 'VLAN', 'DEV', 'DEVICE_ID']]
@@ -84,11 +75,6 @@ class eSwitchDB(object):
                                  port_data['device_id']])
         return table_matrix
 
-    def get_vlan(self, vnic_mac):
-        if self.vnic_exists(vnic_mac):
-            return self.port_policy[vnic_mac]['vlan']
-        return
-
     def create_vnic(self, vnic_mac):
         if not self.vnic_exists(vnic_mac):
             self.port_policy.update({vnic_mac: {'vlan': None,
@@ -96,49 +82,12 @@ class eSwitchDB(object):
                                                 'device_id': None,
                                                 'port_id': None}})
 
-    def get_dev_type(self, dev):
-        dev_type = None
-
-        if dev in self.port_table:
-            dev_type = self.port_table[dev]['type']
-        return dev_type
-
-    def get_dev_alias_for_vnic(self, vnic_mac):
-        alias = None
-        dev = self.get_dev_for_vnic(vnic_mac)
-        if dev:
-            alias = self.port_table[dev].get('alias')
-        return alias
-
-    def get_dev_type_for_vnic(self, vnic_mac):
-        dev = None
-
-        if vnic_mac in self.port_policy:
-            if 'dev' in self.port_policy[vnic_mac]:
-                dev = self.port_policy[vnic_mac]['dev']
-        if dev:
-            return self.port_table[dev]['type']
-        else:
-            return None
-
-        if vnic_mac in self.port_policy:
-            if 'dev' in self.port_policy[vnic_mac]:
-                dev = self.port_policy[vnic_mac]['dev']
-        return dev
-
     def get_dev_for_vnic(self, vnic_mac):
         dev = None
         if vnic_mac in self.port_policy:
             if 'dev' in self.port_policy[vnic_mac]:
                 dev = self.port_policy[vnic_mac]['dev']
         return dev
-
-    def get_vnic_state(self, vnic_mac):
-        dev_state = None
-        dev = self.get_dev_for_vnic(vnic_mac)
-        if dev:
-            dev_state = self.get_port_state(dev)
-        return dev_state
 
     def vnic_exists(self, vnic_mac):
         if vnic_mac in self.port_policy:

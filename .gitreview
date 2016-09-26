@@ -1,4 +1,5 @@
 [gerrit]
 host=review.openstack.org
 port=29418
-project=openstack/networking-mlnx.git
+project=openstack/deb-networking-mlnx.git
+defaultbranch=debian/newton
