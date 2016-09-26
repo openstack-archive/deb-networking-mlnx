@@ -3,6 +3,8 @@ networking-mlnx (1:8.0.0~b3-5) UNRELEASED; urgency=medium
   * Standards-Version is 3.9.8 now (no change)
   * d/rules: Removed UPSTREAM_GIT with default value
   * d/copyright: Changed source URL to https protocol
+  * d/s/options: extend-diff-ignore of .gitreview
+  * d/control: Using OpenStack's Gerrit as VCS URLs.
 
  -- Ondřej Nový <novy@ondrej.org>  Sat, 09 Apr 2016 19:24:03 +0200
 
