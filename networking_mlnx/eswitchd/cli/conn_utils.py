@@ -25,7 +25,6 @@ REQUEST_TIMEOUT = 50000
 
 class ConnUtil(object):
     def __init__(self):
-        self.__conn = None
 
         transport = constants.SOCKET_OS_TRANSPORT
         port = constants.SOCKET_OS_PORT

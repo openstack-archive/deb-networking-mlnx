@@ -39,8 +39,9 @@ class TestPciUtils(base.TestCase):
                               self.pci_utils.get_auto_pf, 'fabtype')
             LOG.error.assert_called_with(log_msg)
 
-    def _test_get_auto_pf(self, devices=[], is_vendor_pf=True,
+    def _test_get_auto_pf(self, devices=None, is_vendor_pf=True,
                           is_sriov=True, valid_fabric_type=True):
+        devices = devices if devices else []
         ifcs = devices if valid_fabric_type else []
         return contextlib.nested(
             mock.patch('ethtool.get_devices', return_value=devices),
@@ -125,36 +126,10 @@ class TestPciUtils(base.TestCase):
         is_sriov = self.pci_utils.is_sriov_pf(pf)
         self.assertFalse(is_sriov)
 
-    def test_get_eth_vf_valid(self):
-        cmd = "ls -U /sys/class/net | head -1"
-        pf = subprocess.check_output(cmd, shell=True)
-        pf = pf.strip()
-
-        ret_val = self.pci_utils.get_eth_vf(pf)
-        cmd = "ls -l /sys/class/net/%s/device | awk '{print $NF}'" \
-            " | cut -d '/' -f4" % pf
-        pci = subprocess.check_output(cmd, shell=True)
-        pci = pci.strip()
-
-        self.assertEqual(ret_val, pci)
-
     def test_get_eth_vf_invalid(self):
         pf = "pf_that_does_not_exist"
         ret_val = self.pci_utils.get_eth_vf(pf)
         self.assertIsNone(ret_val)
-
-    def test_get_pf_pci_type_normal(self):
-        cmd = "ls -U /sys/class/net | head -1"
-        pf = subprocess.check_output(cmd, shell=True)
-        pf = pf.strip()
-
-        ret_val = self.pci_utils.get_pf_pci(pf, "normal")
-        cmd = "ls -l /sys/class/net/%s/device | awk '{print $NF}'" \
-            " | cut -d '/' -f4" % pf
-        pci = subprocess.check_output(cmd, shell=True)
-        pci = pci.strip()
-
-        self.assertEqual(ret_val, pci)
 
     @mock.patch('networking_mlnx.eswitchd.utils.pci_utils.os.readlink')
     @mock.patch('networking_mlnx.eswitchd.utils.pci_utils.os')

@@ -1,10 +1,18 @@
-networking-mlnx (1:8.0.0~b3-5) UNRELEASED; urgency=medium
+networking-mlnx (1:9.0.0~b1-1) experimental; urgency=medium
 
+  [ Ondřej Nový ]
   * Standards-Version is 3.9.8 now (no change)
   * d/rules: Removed UPSTREAM_GIT with default value
   * d/copyright: Changed source URL to https protocol
 
- -- Ondřej Nový <novy@ondrej.org>  Sat, 09 Apr 2016 19:24:03 +0200
+  [ Thomas Goirand ]
+  * New upstream release.
+  * Fixed (build-)depends for this release.
+  * Point .gitreview to OpenStack's packaging-deb Gerrit.
+  * Using OpenStack's Gerrit as VCS URLs.
+  * Removed deleted_non_working_tests.patch (tests aren't there anymore).
+
+ -- Thomas Goirand <zigo@debian.org>  Tue, 27 Sep 2016 00:10:16 +0200
 
 networking-mlnx (1:8.0.0~b3-4) unstable; urgency=medium
 

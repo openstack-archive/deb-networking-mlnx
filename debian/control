@@ -7,7 +7,7 @@ Uploaders: Thomas Goirand <zigo@debian.org>,
 Build-Depends: debhelper (>= 9),
                dh-python,
                dh-systemd,
-               openstack-pkg-tools (>= 34~),
+               openstack-pkg-tools (>= 52~),
                po-debconf,
                python-all,
                python-pbr (>= 0.11),
@@ -20,10 +20,11 @@ Build-Depends-Indep: python-babel,
                      python-hacking,
                      python-lxml,
                      python-mock (>= 1.3),
-                     python-neutron (>= 2:8.0.0~b2),
+                     python-neutron (>= 2:9.0.0~rc1),
                      python-oslosphinx (>= 2.5.0),
                      python-oslotest (>= 1.5.1),
                      python-os-testr (>= 0.4.1),
+                     python-psycopg2,
                      python-pymysql,
                      python-requests-mock (>= 0.7.0),
                      python-tempest-lib (>= 0.13.0),
@@ -31,19 +32,21 @@ Build-Depends-Indep: python-babel,
                      python-testscenarios,
                      python-testtools (>= 1.4.0),
                      python-webtest (>= 2.0),
+                     python-zmq,
                      subunit (>= 0.0.18),
                      testrepository (>= 0.0.18),
 Standards-Version: 3.9.8
-Homepage: http://neutron.openstack.org/
-Vcs-Browser: https://anonscm.debian.org/cgit/openstack/networking-mlnx.git/
-Vcs-Git: https://anonscm.debian.org/git/openstack/networking-mlnx.git
+Vcs-Browser: https://git.openstack.org/cgit/openstack/deb-networking-mlnx?h=debian%2Fnewton
+Vcs-Git: https://git.openstack.org/openstack/deb-networking-mlnx -b debian/newton
+Homepage: https://github.com/openstack/networking-mlnx
 
 Package: python-networking-mlnx
 Architecture: all
 Section: python
 Depends: python-babel,
          python-lxml,
-         python-neutron (>= 1:8.0.0~b2),
+         python-neutron (>= 1:9.0.0~rc1),
+         python-zmq,
          ${misc:Depends},
          ${python:Depends},
 Description: OpenStack virtual network service - Mellanox plugin Python 2.7 files

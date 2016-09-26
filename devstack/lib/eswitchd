@@ -44,8 +44,12 @@ function configure_eswitchd {
     # configure nova rootwarp
     Q_NOVA_RR_CONF_FILE=$NOVA_CONF_DIR/rootwrap.conf
     sudo sed -e 's:^exec_dirs=\(.*\)$:exec_dirs=\1,/usr/local/bin:' -i $Q_NOVA_RR_CONF_FILE
-
-    iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "${PHYSICAL_NETWORK}:${PHYSICAL_INTERFACE}"
+    
+    if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then 
+        iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "$PHYSICAL_INTERFACE_MAPPINGS"
+    else
+        iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "${PHYSICAL_NETWORK}:${PHYSICAL_INTERFACE}"
+    fi
 }
 
 function init_eswitchd {
@@ -65,7 +69,7 @@ function check_eswitchd {
 }
 
 function cleanup_eswitch {
-    sudo rm -rf ${ESWITCHD_CONF_DIR}
+    sudo rm -rf ${ESWITCHD_CONF_FILE}
 }
 
 # Restore trace

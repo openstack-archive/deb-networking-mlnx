@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from networking_mlnx._i18n import _LE
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
+import six
 
+from networking_mlnx._i18n import _LE
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import comm_utils
 from networking_mlnx.plugins.ml2.drivers.mlnx.agent import exceptions
 
@@ -98,7 +99,7 @@ class EswitchUtils(object):
         self.send_msg(msg)
 
     def define_fabric_mappings(self, interface_mapping):
-        for fabric, phy_interface in interface_mapping.iteritems():
+        for fabric, phy_interface in six.iteritems(interface_mapping):
             LOG.debug("Define Fabric %(fabric)s on interface %(ifc)s",
                       {'fabric': fabric,
                        'ifc': phy_interface})

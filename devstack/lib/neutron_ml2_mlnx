@@ -57,7 +57,7 @@ function configure_neutron_ml2_mlnx {
         if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then
             iniset /$Q_PLUGIN_CONF_FILE eswitch physical_interface_mappings $PHYSICAL_INTERFACE_MAPPINGS
         fi
-        iniset /$Q_PLUGIN_CONF_FILE securitygroup firewall_driver neutron.agent.firewall.NoopFirewallDriver
+        iniset /$Q_PLUGIN_CONF_FILE securitygroup noop
     fi
     if is_service_enabled eswitchd; then
         configure_eswitchd

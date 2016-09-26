@@ -11,50 +11,25 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import functools
-import requests
-import time
 
-from networking_mlnx._i18n import _LE
+import functools
+
 from neutron.common import constants as neutron_const
+from neutron.db import api as db_api
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api
-from oslo_config import cfg
 from oslo_log import log
-from oslo_serialization import jsonutils
 
-import networking_mlnx.plugins.ml2.drivers.sdn.constants as sdn_const
-import networking_mlnx.plugins.ml2.drivers.sdn.exceptions as sdn_exc
+from networking_mlnx._i18n import _LE
+from networking_mlnx.journal import cleanup
+from networking_mlnx.journal import journal
+from networking_mlnx.journal import maintenance
+from networking_mlnx.plugins.ml2.drivers.sdn import client
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 LOG = log.getLogger(__name__)
 
-sdn_opts = [
-        cfg.StrOpt('url',
-                   help=_("HTTP URL of SDN Provider."),
-                   ),
-        cfg.StrOpt('domain',
-                   help=_("Cloud domain name in SDN provider "
-                          "(for example: cloudx)"),
-                   ),
-        cfg.StrOpt('username',
-                   help=_("HTTP username for authentication."),
-                   ),
-        cfg.StrOpt('password',
-                   help=_("HTTP password for authentication."),
-                   secret=True
-                   ),
-        cfg.IntOpt('timeout',
-                   help=_("HTTP timeout in seconds."),
-                   default=10
-                   ),
-        cfg.IntOpt('session_timeout',
-                   help=_("Login session timeout in seconds."),
-                   default=86400
-                   ),
-]
-
-cfg.CONF.register_opts(sdn_opts, sdn_const.GROUP_OPT)
 NETWORK_QOS_POLICY = 'network_qos_policy'
 
 
@@ -62,11 +37,11 @@ def context_validator(context_type=None):
     def real_decorator(func):
         @functools.wraps(func)
         def wrapper(instance, context, *args, **kwargs):
-            if context_type == sdn_const.PORT_PATH:
+            if context_type == sdn_const.PORT:
                 # port context contain network_context
                 # which include the segments
                 segments = getattr(context._network_context, "_segments", None)
-            elif context_type == sdn_const.NETWORK_PATH:
+            elif context_type == sdn_const.NETWORK:
                 segments = getattr(context, "_segments", None)
             else:
                 segments = getattr(context, "segments_to_bind", None)
@@ -99,120 +74,103 @@ class SDNMechanismDriver(api.MechanismDriver):
     The notifications are for port/network changes.
     """
 
-    def _validate_mandatory_params_exist(self):
-        mandatory_args = ("url", "username", "password")
-        for arg in mandatory_args:
-            if not getattr(self, arg):
-                raise cfg.RequiredOptError(arg, sdn_const.GROUP_OPT)
-
-    def _strings_to_url(self, *args):
-        return "/".join(filter(None, args))
-
-    def _getSession(self):
-        if self.session_start == 0 or (time.time() - self.session_start
-                                       >= self.session_timeout):
-            login_url = self._strings_to_url(str(self.url), "login")
-            login_data = "username=%s&password=%s" % (self.username,
-                                                      self.password)
-            login_headers = sdn_const.LOGIN_HTTP_HEADER
-            try:
-                session = requests.session()
-                LOG.debug("Login to SDN Provider. Login URL %(url)s",
-                         {'url': login_url})
-                r = session.request(sdn_const.POST, login_url, data=login_data,
-                                    headers=login_headers)
-                LOG.debug("request status: %d", r.status_code)
-                r.raise_for_status()
-            except Exception as e:
-                raise sdn_exc.SDNLoginError(login_url=login_url, msg=e)
-
-            self.session_start = time.time()
-            self.session = session
-
-        return self.session
-
     def initialize(self):
-        self.url = cfg.CONF.sdn.url
-        try:
-            self.url = self.url.rstrip("/")
-        except Exception:
-            pass
-        self.domain = cfg.CONF.sdn.domain
-        self.username = cfg.CONF.sdn.username
-        self.password = cfg.CONF.sdn.password
-        self.timeout = cfg.CONF.sdn.timeout
-        self.session_timeout = cfg.CONF.sdn.session_timeout
-        self.session_start = 0
-        self._validate_mandatory_params_exist()
+        self.client = client.SdnRestClient.create_client()
+        self.journal = journal.SdnJournalThread()
+        self._start_maintenance_thread()
 
-    @context_validator(sdn_const.NETWORK_PATH)
-    @error_handler
-    def create_network_postcommit(self, context):
-        network_dic = context._network
-        network_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, network_dic['id']))
-        self._send_json_http_request(method=sdn_const.POST,
-                                     urlpath=sdn_const.NETWORK_PATH,
-                                     data=network_dic)
+    def _start_maintenance_thread(self):
+        # start the maintenance thread and register all the maintenance
+        # operations :
+        # (1) JournalCleanup - Delete completed rows from journal
+        # (2) CleanupProcessing - Mark orphaned processing rows to pending
+        cleanup_obj = cleanup.JournalCleanup()
+        self._maintenance_thread = maintenance.MaintenanceThread()
+        self._maintenance_thread.register_operation(
+            cleanup_obj.delete_completed_rows)
+        self._maintenance_thread.register_operation(
+            cleanup_obj.cleanup_processing_rows)
+        self._maintenance_thread.start()
 
-    @context_validator(sdn_const.NETWORK_PATH)
-    @error_handler
-    def update_network_postcommit(self, context):
-        network_dic = context._network
-        network_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, network_dic['id']))
-        urlpath = self._strings_to_url(sdn_const.NETWORK_PATH,
-                                       network_dic['id'])
-        self._send_json_http_request(method=sdn_const.PUT,
-                                     urlpath=urlpath,
-                                     data=network_dic)
+    @staticmethod
+    def _record_in_journal(context, object_type, operation, data=None):
+        if data is None:
+            data = context.current
+        journal.record(context._plugin_context.session, object_type,
+                       context.current['id'], operation, data)
 
-    @context_validator(sdn_const.NETWORK_PATH)
+    @context_validator(sdn_const.NETWORK)
     @error_handler
-    def delete_network_postcommit(self, context):
-        network_dic = context._network
-        network_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, network_dic['id']))
-        urlpath = self._strings_to_url(sdn_const.NETWORK_PATH,
-                                       network_dic['id'])
-        self._send_json_http_request(method=sdn_const.DELETE,
-                                     urlpath=urlpath,
-                                     data=network_dic)
-
-    @context_validator(sdn_const.PORT_PATH)
-    @error_handler
-    def update_port_postcommit(self, context):
-        port_dic = context._port
-        port_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, port_dic['network_id']))
-        urlpath_port = self._strings_to_url(sdn_const.PORT_PATH,
-                                            port_dic['id'])
-        self._send_json_http_request(method=sdn_const.PUT,
-                                     urlpath=urlpath_port,
-                                     data=port_dic)
-
-    @context_validator(sdn_const.PORT_PATH)
-    @error_handler
-    def delete_port_postcommit(self, context):
-        port_dic = context._port
-        port_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, port_dic['network_id']))
-        urlpath_port = self._strings_to_url(sdn_const.PORT_PATH,
-                                            port_dic['id'])
-        self._send_json_http_request(method=sdn_const.DELETE,
-                                     urlpath=urlpath_port,
-                                     data=port_dic)
+    def create_network_precommit(self, context):
+        network_dic = context.current
+        if network_dic.get('provider:segmentation_id'):
+            network_dic[NETWORK_QOS_POLICY] = (
+                self._get_network_qos_policy(context, network_dic['id']))
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.NETWORK, sdn_const.POST, network_dic)
 
     @context_validator()
     @error_handler
     def bind_port(self, context):
-        port_dic = context._port
+        port_dic = context.current
         if self._is_send_bind_port(port_dic):
             port_dic[NETWORK_QOS_POLICY] = (
                 self._get_network_qos_policy(context, port_dic['network_id']))
-            self._send_json_http_request(method=sdn_const.POST,
-                                         urlpath=sdn_const.PORT_PATH,
-                                         data=port_dic)
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.PORT, sdn_const.POST, port_dic)
+
+    @context_validator(sdn_const.NETWORK)
+    @error_handler
+    def update_network_precommit(self, context):
+        network_dic = context.current
+        network_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, network_dic['id']))
+        SDNMechanismDriver._record_in_journal(
+            context, sdn_const.NETWORK, sdn_const.PUT, network_dic)
+
+    def update_port_precommit(self, context):
+        port_dic = context.current
+        port_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, port_dic['network_id']))
+        SDNMechanismDriver._record_in_journal(
+            context, sdn_const.PORT, sdn_const.PUT, port_dic)
+
+    @context_validator(sdn_const.NETWORK)
+    @error_handler
+    def delete_network_precommit(self, context):
+        network_dic = context.current
+        network_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, network_dic['id']))
+        SDNMechanismDriver._record_in_journal(
+            context, sdn_const.NETWORK, sdn_const.DELETE, data=network_dic)
+
+    @context_validator(sdn_const.PORT)
+    @error_handler
+    def delete_port_precommit(self, context):
+        port_dic = context.current
+        port_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, port_dic['network_id']))
+        SDNMechanismDriver._record_in_journal(
+            context, sdn_const.PORT, sdn_const.DELETE, port_dic)
+
+    @journal.call_thread_on_end
+    def sync_from_callback(self, operation, res_type, res_id, resource_dict):
+        object_type = res_type.singular
+        object_uuid = (resource_dict[object_type]['id']
+                       if operation == sdn_const.POST else res_id)
+        if resource_dict is not None:
+            resource_dict = resource_dict[object_type]
+        journal.record(db_api.get_session(), object_type, object_uuid,
+                       operation, resource_dict)
+
+    def _postcommit(self, context):
+        self.journal.set_sync_event()
+
+    create_network_postcommit = _postcommit
+    update_network_postcommit = _postcommit
+    update_port_postcommit = _postcommit
+    delete_network_postcommit = _postcommit
+    delete_port_postcommit = _postcommit
 
     def _is_send_bind_port(self, port_context):
         """Verify that bind port is occur in compute context
@@ -247,25 +205,6 @@ class SDNMechanismDriver(api.MechanismDriver):
                 if self.check_segment(segment):
                     return True
         return False
-
-    def _send_json_http_request(self, urlpath, data, method):
-        """send json http request to the SDN provider
-        """
-        dest_url = self._strings_to_url(self.url, self.domain, urlpath)
-
-        data = jsonutils.dumps(data, indent=2)
-        session = self._getSession()
-
-        try:
-            LOG.debug("Sending METHOD %(method)s URL %(url)s JSON %(data)s",
-                      {'method': method, 'url': dest_url, 'data': data})
-            r = session.request(method, url=dest_url,
-                                headers=sdn_const.JSON_HTTP_HEADER,
-                                data=data, timeout=self.timeout)
-            LOG.debug("request status: %d", r.status_code)
-            r.raise_for_status()
-        except Exception as e:
-            raise sdn_exc.SDNConnectionError(dest_url=dest_url, msg=e)
 
     def _get_network_qos_policy(self, context, net_id):
         return policy_object.QosPolicy.get_network_policy(

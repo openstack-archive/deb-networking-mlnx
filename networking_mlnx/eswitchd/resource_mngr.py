@@ -68,9 +68,6 @@ class ResourceManager(object):
                 vm_ids[dev[0]] = vm_id
         return devices, vm_ids
 
-    def get_fabric_pf(self, fabric):
-        return self.device_db.get_pf(fabric)
-
     def get_fabric_details(self, fabric):
         return self.device_db.get_fabric_details(fabric)
 
