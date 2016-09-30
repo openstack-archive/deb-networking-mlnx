@@ -14,5 +14,5 @@
 # Author: Thomas Goirand <zigo@debian.org>
 DESC="OpenStack Networking Mellanox Plugin eswitchd"
 PROJECT_NAME=neutron
-NAME=networking-mlnx-eswitchd
+NAME=eswitchd
 DAEMON_ARGS="--config-file=/etc/neutron/plugins/ml2/eswitchd.conf"
