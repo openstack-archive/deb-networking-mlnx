@@ -1,4 +1,4 @@
-networking-mlnx (1:9.0.0~b1-1) experimental; urgency=medium
+networking-mlnx (1:9.0.0~b1-1) unstable; urgency=medium
 
   [ Ondřej Nový ]
   * Standards-Version is 3.9.8 now (no change)
