@@ -13,6 +13,7 @@ networking-mlnx (1:9.0.0~b1-1) unstable; urgency=medium
   * Removed deleted_non_working_tests.patch (tests aren't there anymore).
   * Adds python-zmq and python-ethtool as (build-)depends.
   * Fixed oslotest EPOCH.
+  * Defines SCRIPTNAME=networking-mlnx-eswitchd.
 
  -- Thomas Goirand <zigo@debian.org>  Tue, 27 Sep 2016 00:10:16 +0200
 
