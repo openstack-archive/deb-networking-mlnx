@@ -16,6 +16,7 @@ import functools
 
 from neutron.common import constants as neutron_const
 from neutron.db import api as db_api
+from neutron.extensions import portbindings
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api
@@ -78,6 +79,11 @@ class SDNMechanismDriver(api.MechanismDriver):
         self.client = client.SdnRestClient.create_client()
         self.journal = journal.SdnJournalThread()
         self._start_maintenance_thread()
+        self.supported_vnic_types = [portbindings.VNIC_BAREMETAL]
+        self.supported_network_types = (
+            [constants.TYPE_VLAN, constants.TYPE_FLAT])
+        self.vif_type = portbindings.VIF_TYPE_OTHER
+        self.vif_details = {}
 
     def _start_maintenance_thread(self):
         # start the maintenance thread and register all the maintenance
@@ -118,6 +124,16 @@ class SDNMechanismDriver(api.MechanismDriver):
                 self._get_network_qos_policy(context, port_dic['network_id']))
             SDNMechanismDriver._record_in_journal(
                 context, sdn_const.PORT, sdn_const.POST, port_dic)
+
+        segments = context.network.network_segments
+        for segment in segments:
+            vnic_type = port_dic[portbindings.VNIC_TYPE]
+            # set port to active if it is in the supported vnic types
+            # currently used for VNIC_BAREMETAL
+            if vnic_type in self.supported_vnic_types:
+                context.set_binding(segment[api.ID],
+                                    self.vif_type,
+                                    self.vif_details)
 
     @context_validator(sdn_const.NETWORK)
     @error_handler
@@ -191,7 +207,7 @@ class SDNMechanismDriver(api.MechanismDriver):
         or False to indicate this to callers.
         """
         network_type = segment[api.NETWORK_TYPE]
-        return network_type in [constants.TYPE_VLAN, constants.TYPE_FLAT]
+        return network_type in self.supported_network_types
 
     def check_segments(self, segments):
         """Verify if there is a segment in a list of segments that valid for
