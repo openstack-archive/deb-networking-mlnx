@@ -26,3 +26,4 @@ reno>=0.1.1 # Apache2
 # Needed to run DB commands in virtualenvs
 PyMySQL>=0.6.2 # MIT License
 psycopg2>=2.5 # LGPL/ZPL
+vine>=1.1.3
