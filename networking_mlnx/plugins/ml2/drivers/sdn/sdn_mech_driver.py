@@ -58,7 +58,7 @@ def error_handler(func):
     def wrapper(instance, *args, **kwargs):
         try:
             return func(instance, *args, **kwargs)
-        except Exception as (e):
+        except Exception as e:
             LOG.error(
                     _LE("%(function_name)s %(exception_desc)s"),
                     {'function_name': func.__name__,

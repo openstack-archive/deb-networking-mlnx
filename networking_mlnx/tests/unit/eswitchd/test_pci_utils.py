@@ -16,6 +16,7 @@
 
 import contextlib
 import mock
+import six
 import subprocess
 import sys
 
@@ -25,6 +26,14 @@ from networking_mlnx._i18n import _LE
 from networking_mlnx.eswitchd.utils import pci_utils
 from networking_mlnx.eswitchd.utils.pci_utils import pciUtils
 from networking_mlnx.tests import base
+
+if six.PY3:
+    @contextlib.contextmanager
+    def nested(*contexts):
+        with contextlib.ExitStack() as stack:
+            yield [stack.enter_context(c) for c in contexts]
+else:
+    nested = contextlib.nested
 
 
 class TestPciUtils(base.TestCase):
@@ -43,7 +52,7 @@ class TestPciUtils(base.TestCase):
                           is_sriov=True, valid_fabric_type=True):
         devices = devices if devices else []
         ifcs = devices if valid_fabric_type else []
-        return contextlib.nested(
+        return nested(
             mock.patch('ethtool.get_devices', return_value=devices),
             mock.patch.object(self.pci_utils, 'verify_vendor_pf',
                               return_value=is_vendor_pf),
@@ -89,7 +98,7 @@ class TestPciUtils(base.TestCase):
     def test_get_dev_attr_valid_attr(self):
         cmd = "find /sys/class/net/*/device/vendor | head -1 | cut -d '/' -f5"
         pf = subprocess.check_output(cmd, shell=True)
-        pf = pf.strip()
+        pf = pf.strip().decode("utf-8")
         if pf:
             attr_path = "/sys/class/net/%s/device/vendor" % pf
             return_val = self.pci_utils.get_dev_attr(attr_path)
@@ -103,11 +112,11 @@ class TestPciUtils(base.TestCase):
     def test_verify_vendor_pf_valid_vendor(self):
         cmd = "find /sys/class/net/*/device/vendor | head -1 | cut -d '/' -f5"
         pf = subprocess.check_output(cmd, shell=True)
-        pf = pf.strip()
+        pf = pf.strip().decode("utf-8")
         if pf:
             attr_path = "/sys/class/net/%s/device/vendor" % pf
             attr = subprocess.check_output("cat %s" % attr_path, shell=True)
-            attr = attr.strip()
+            attr = attr.strip().decode("utf-8")
             return_val = self.pci_utils.verify_vendor_pf(pf, attr)
             self.assertTrue(return_val)
 

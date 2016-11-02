@@ -35,7 +35,7 @@ from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 from networking_mlnx.plugins.ml2.drivers.sdn import utils as sdn_utils
 
 PLUGIN_NAME = 'neutron.plugins.ml2.plugin.Ml2Plugin'
-SEG_ID = 4L
+SEG_ID = 4
 DEVICE_OWNER_COMPUTE = 'compute:None'
 MECHANISM_DRIVER_NAME = 'mlnx_sdn_assist'
 
