@@ -144,12 +144,43 @@ class SDNMechanismDriver(api.MechanismDriver):
         SDNMechanismDriver._record_in_journal(
             context, sdn_const.NETWORK, sdn_const.PUT, network_dic)
 
-    def update_port_precommit(self, context):
+    def _get_client_id_from_port(self, port):
+        dhcp_opts = port.get('extra_dhcp_opts', [])
+        for dhcp_opt in dhcp_opts:
+            if (isinstance(dhcp_opt, dict) and
+                    dhcp_opt.get('opt_name') == 'client-id'):
+                return dhcp_opt.get('opt_value')
+
+    def create_port_precommit(self, context):
         port_dic = context.current
         port_dic[NETWORK_QOS_POLICY] = (
             self._get_network_qos_policy(context, port_dic['network_id']))
-        SDNMechanismDriver._record_in_journal(
-            context, sdn_const.PORT, sdn_const.PUT, port_dic)
+
+        vnic_type = port_dic[portbindings.VNIC_TYPE]
+        # Check if we get a client id after binding the bare metal port,
+        # and report the port to neo
+        if vnic_type == portbindings.VNIC_BAREMETAL:
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.PORT, sdn_const.POST, port_dic)
+
+    def update_port_precommit(self, context):
+        port_dic = context.current
+        orig_port_dict = context.original
+        port_dic[NETWORK_QOS_POLICY] = (
+            self._get_network_qos_policy(context, port_dic['network_id']))
+
+        vnic_type = port_dic[portbindings.VNIC_TYPE]
+        # Check if we get a client id after binding the bare metal port,
+        # and report the port to neo
+        if vnic_type == portbindings.VNIC_BAREMETAL:
+            current_client_id = self._get_client_id_from_port(port_dic)
+            orig_client_id = self._get_client_id_from_port(orig_port_dict)
+            if current_client_id != orig_client_id:
+                SDNMechanismDriver._record_in_journal(
+                    context, sdn_const.PORT, sdn_const.POST, port_dic)
+        else:
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.PORT, sdn_const.PUT, port_dic)
 
     @context_validator(sdn_const.NETWORK)
     @error_handler
@@ -184,6 +215,7 @@ class SDNMechanismDriver(api.MechanismDriver):
 
     create_network_postcommit = _postcommit
     update_network_postcommit = _postcommit
+    create_port_postcommit = _postcommit
     update_port_postcommit = _postcommit
     delete_network_postcommit = _postcommit
     delete_port_postcommit = _postcommit
