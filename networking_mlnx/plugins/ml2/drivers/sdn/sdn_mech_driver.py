@@ -178,6 +178,18 @@ class SDNMechanismDriver(api.MechanismDriver):
             if current_client_id != orig_client_id:
                 SDNMechanismDriver._record_in_journal(
                     context, sdn_const.PORT, sdn_const.POST, port_dic)
+        # delete the port in case instance is deleted
+        # and port is created seperatly
+        elif (orig_port_dict[portbindings.HOST_ID] and
+              not port_dic[portbindings.HOST_ID]):
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.PORT, sdn_const.DELETE, port_dic)
+        # delete the port in case instance is migrated to another hypervisor
+        elif (orig_port_dict[portbindings.HOST_ID] and
+              port_dic[portbindings.HOST_ID] !=
+              orig_port_dict[portbindings.HOST_ID]):
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.PORT, sdn_const.DELETE, orig_port_dict)
         else:
             SDNMechanismDriver._record_in_journal(
                 context, sdn_const.PORT, sdn_const.PUT, port_dic)
@@ -195,10 +207,13 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def delete_port_precommit(self, context):
         port_dic = context.current
-        port_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, port_dic['network_id']))
-        SDNMechanismDriver._record_in_journal(
-            context, sdn_const.PORT, sdn_const.DELETE, port_dic)
+        # delete the port only if attached to a host
+        if port_dic[portbindings.HOST_ID]:
+                port_dic[NETWORK_QOS_POLICY] = (
+                    self._get_network_qos_policy(context,
+                                                 port_dic['network_id']))
+                SDNMechanismDriver._record_in_journal(
+                    context, sdn_const.PORT, sdn_const.DELETE, port_dic)
 
     @journal.call_thread_on_end
     def sync_from_callback(self, operation, res_type, res_id, resource_dict):

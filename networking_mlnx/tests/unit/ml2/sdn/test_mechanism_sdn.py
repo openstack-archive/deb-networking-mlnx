@@ -169,6 +169,16 @@ class SdnDriverTestCase(SdnConfigBase):
                    'name': 'port_test1',
                    'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
                    'network_qos_policy': None}
+        original = {'binding:host_id': None,
+                    'binding:profile': {u'pci_slot': None,
+                                        u'physical_network': u'physnet1',
+                                        u'pci_vendor_info': u'15b3:1004'},
+                    'id': None,
+                    'binding:vnic_type': None,
+                    'mac_address': None,
+                    'name': None,
+                    'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
+                    'network_qos_policy': None}
 
         # The port context should have NetwrokContext object that contain
         # the segments list
@@ -176,6 +186,7 @@ class SdnDriverTestCase(SdnConfigBase):
                             {"_segments": self._get_segments_list()})
 
         context = mock.Mock(current=current, _port=current,
+                            original=original,
                             _network_context=network_context)
         context._plugin_context.session = neutron_db_api.get_session()
         return context
