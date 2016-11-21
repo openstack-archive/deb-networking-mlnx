@@ -29,9 +29,6 @@ GET = "GET"
 LOGIN_HTTP_HEADER = {'content-type': 'application/x-www-form-urlencoded'}
 JSON_HTTP_HEADER = {"Content-Type": "application/json"}
 
-# Port device owner
-PORT_DEVICE_OWNER_COMPUTE = 'compute:'
-
 # Constants for journal operation states
 PENDING = 'pending'
 PROCESSING = 'processing'

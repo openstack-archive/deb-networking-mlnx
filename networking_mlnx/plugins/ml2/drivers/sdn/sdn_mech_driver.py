@@ -14,12 +14,13 @@
 
 import functools
 
-from neutron.common import constants as neutron_const
+
 from neutron.db import api as db_api
 from neutron.extensions import portbindings
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api
+from neutron_lib import constants as neutron_const
 from oslo_log import log
 
 from networking_mlnx._i18n import _LE
@@ -244,7 +245,7 @@ class SDNMechanismDriver(api.MechanismDriver):
         device_owner = port_context['device_owner']
         return (device_owner and
                 (device_owner.lower().startswith(
-                 sdn_const.PORT_DEVICE_OWNER_COMPUTE) or
+                 neutron_const.DEVICE_OWNER_COMPUTE_PREFIX) or
                  device_owner == neutron_const.DEVICE_OWNER_DHCP))
 
     def check_segment(self, segment):
