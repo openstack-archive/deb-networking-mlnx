@@ -152,15 +152,20 @@ class SDNMechanismDriver(api.MechanismDriver):
                     dhcp_opt.get('opt_name') == 'client-id'):
                 return dhcp_opt.get('opt_value')
 
+    def _get_local_link_information(self, port):
+        binding_profile = port.get('binding:profile')
+        if binding_profile:
+            return binding_profile.get('local_link_information')
+
     def create_port_precommit(self, context):
         port_dic = context.current
         port_dic[NETWORK_QOS_POLICY] = (
             self._get_network_qos_policy(context, port_dic['network_id']))
 
         vnic_type = port_dic[portbindings.VNIC_TYPE]
-        # Check if we get a client id after binding the bare metal port,
-        # and report the port to neo
-        if vnic_type == portbindings.VNIC_BAREMETAL:
+        if (vnic_type == portbindings.VNIC_BAREMETAL and
+            (self._get_client_id_from_port(port_dic) or
+             self._get_local_link_information(port_dic))):
             SDNMechanismDriver._record_in_journal(
                 context, sdn_const.PORT, sdn_const.POST, port_dic)
 
@@ -174,6 +179,14 @@ class SDNMechanismDriver(api.MechanismDriver):
         # Check if we get a client id after binding the bare metal port,
         # and report the port to neo
         if vnic_type == portbindings.VNIC_BAREMETAL:
+            # Ethernet Case
+            link__info = self._get_local_link_information(port_dic)
+            orig_link_info = self._get_local_link_information(orig_port_dict)
+            if link__info != orig_link_info:
+                SDNMechanismDriver._record_in_journal(
+                    context, sdn_const.PORT, sdn_const.POST, port_dic)
+                return
+            # InfiniBand Case
             current_client_id = self._get_client_id_from_port(port_dic)
             orig_client_id = self._get_client_id_from_port(orig_port_dict)
             if current_client_id != orig_client_id:
