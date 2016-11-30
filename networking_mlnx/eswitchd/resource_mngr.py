@@ -104,8 +104,9 @@ class ResourceManager(object):
                     pf_mlx_dev = fabric_details['pf_mlx_dev']
                     vf_index = self.pci_utils.get_guid_index(pf_mlx_dev, dev,
                                                              hca_port)
-                elif fabric_details['pf_device_type'] == \
-                    constants.CX4_VF_DEVICE_TYPE:
+                elif fabric_details['pf_device_type'] in \
+                    [constants.CX4_VF_DEVICE_TYPE,
+                     constants.CX5_VF_DEVICE_TYPE]:
                     vf_index = fabric_details['vfs'][dev]['vf_num']
                 try:
                     mac = self.macs_map[fabric][str(vf_index)]

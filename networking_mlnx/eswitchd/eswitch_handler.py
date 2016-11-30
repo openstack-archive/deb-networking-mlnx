@@ -261,7 +261,8 @@ class eSwitchHandler(object):
                 prefix = mac[:6]
                 suffix = mac[6:]
                 guid = prefix + '0000' + suffix
-        elif device_type == constants.CX4_VF_DEVICE_TYPE:
+        elif (device_type == constants.CX4_VF_DEVICE_TYPE or
+              device_type == constants.CX5_VF_DEVICE_TYPE):
             if mac is None:
                 guid = constants.INVALID_GUID_CX4
             else:
@@ -276,7 +277,8 @@ class eSwitchHandler(object):
         vguid = self._get_guid_from_mac(vnic_mac, vf_device_type)
         if vf_device_type == constants.CX3_VF_DEVICE_TYPE:
             self._config_vf_mac_address_cx3(vguid, dev, fabric_details)
-        elif vf_device_type == constants.CX4_VF_DEVICE_TYPE:
+        elif (vf_device_type == constants.CX4_VF_DEVICE_TYPE or
+              vf_device_type == constants.CX5_VF_DEVICE_TYPE):
             self._config_vf_mac_address_cx4(vguid, dev, fabric_details)
         else:
             LOG.error(_LE("Unsupported vf device type: %s "),
