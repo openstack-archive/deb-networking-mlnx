@@ -98,15 +98,6 @@ class SdnRestClient(object):
                 method, url=str(urlpath), headers=sdn_const.JSON_HTTP_HEADER,
                 data=data, timeout=self.timeout))
 
-    def try_delete(self, urlpath):
-        response = self.delete(urlpath)
-        if response.status_code == requests.codes.not_found:
-            # The resource is already removed. ignore 404 gracefully
-            LOG.debug("%(urlpath)s doesn't exist", {'urlpath': urlpath})
-            return False
-        self._check_rensponse(response)
-        return True
-
     def _check_rensponse(self, response):
         try:
             LOG.debug("request status: %d", response.status_code)
