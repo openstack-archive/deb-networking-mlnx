@@ -30,7 +30,6 @@ class TestClient(base.TestCase):
         super(TestClient, self).setUp()
         self.conf_fixture = self.useFixture(fixture_config.Config())
         self.conf = self.conf_fixture.conf
-        self.conf.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
         self._set_args()
         self.client = client.SdnRestClient.create_client()
         self.url = 'some_url'

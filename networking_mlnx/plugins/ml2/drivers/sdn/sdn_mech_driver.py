@@ -27,7 +27,6 @@ from networking_mlnx._i18n import _LE
 from networking_mlnx.journal import cleanup
 from networking_mlnx.journal import journal
 from networking_mlnx.journal import maintenance
-from networking_mlnx.plugins.ml2.drivers.sdn import client
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 LOG = log.getLogger(__name__)
@@ -77,7 +76,6 @@ class SDNMechanismDriver(api.MechanismDriver):
     """
 
     def initialize(self):
-        self.client = client.SdnRestClient.create_client()
         self.journal = journal.SdnJournalThread()
         self._start_maintenance_thread()
         self.supported_vnic_types = [portbindings.VNIC_BAREMETAL]
@@ -193,11 +191,11 @@ class SDNMechanismDriver(api.MechanismDriver):
                 SDNMechanismDriver._record_in_journal(
                     context, sdn_const.PORT, sdn_const.POST, port_dic)
         # delete the port in case instance is deleted
-        # and port is created seperatly
+        # and port is created separately
         elif (orig_port_dict[portbindings.HOST_ID] and
               not port_dic[portbindings.HOST_ID]):
             SDNMechanismDriver._record_in_journal(
-                context, sdn_const.PORT, sdn_const.DELETE, port_dic)
+                context, sdn_const.PORT, sdn_const.DELETE, orig_port_dict)
         # delete the port in case instance is migrated to another hypervisor
         elif (orig_port_dict[portbindings.HOST_ID] and
               port_dic[portbindings.HOST_ID] !=

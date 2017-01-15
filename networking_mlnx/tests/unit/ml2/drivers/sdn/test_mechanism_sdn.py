@@ -18,11 +18,11 @@ import requests
 
 from neutron.db import api as neutron_db_api
 from neutron.plugins.common import constants
-from neutron.plugins.ml2 import config
 from neutron.plugins.ml2 import plugin
 from neutron.tests.unit.plugins.ml2 import test_plugin
 from neutron.tests.unit import testlib_api
 from oslo_config import cfg
+from oslo_config import fixture as fixture_config
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 
@@ -30,6 +30,7 @@ from networking_mlnx.db import db
 from networking_mlnx.journal import cleanup
 from networking_mlnx.journal import journal
 from networking_mlnx.plugins.ml2.drivers.sdn import client
+from networking_mlnx.plugins.ml2.drivers.sdn import config
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 from networking_mlnx.plugins.ml2.drivers.sdn import utils as sdn_utils
@@ -40,17 +41,23 @@ DEVICE_OWNER_COMPUTE = 'compute:None'
 MECHANISM_DRIVER_NAME = 'mlnx_sdn_assist'
 
 
+cfg.CONF.import_group(sdn_const.GROUP_OPT,
+                      'networking_mlnx.plugins.ml2.drivers.sdn')
+
+
 class SdnConfigBase(test_plugin.Ml2PluginV2TestCase):
 
     def setUp(self):
         super(SdnConfigBase, self).setUp()
-        config.cfg.CONF.set_override('mechanism_drivers',
-                                     ['logger', MECHANISM_DRIVER_NAME],
-                                     'ml2')
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo',
-                                     sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
+        self.conf_fixture = self.useFixture(fixture_config.Config())
+        self.conf = self.conf_fixture.conf
+        self.conf.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
+        self.conf.set_override('mechanism_drivers',
+                              ['logger', MECHANISM_DRIVER_NAME],
+                              'ml2')
+        self.conf.set_override('url', 'http://127.0.0.1/neo',
+                               sdn_const.GROUP_OPT)
+        self.conf.set_override('username', 'admin', sdn_const.GROUP_OPT)
 
 
 class SdnTestCase(SdnConfigBase):
@@ -72,17 +79,20 @@ class SdnMechanismConfigTests(testlib_api.SqlTestCase):
 
     def _set_config(self, url='http://127.0.0.1/neo',
                     username='admin',
-                    password='admin'):
-        config.cfg.CONF.set_override('mechanism_drivers',
-                                     ['logger', MECHANISM_DRIVER_NAME],
-                                     'ml2')
-        config.cfg.CONF.set_override('url', url, sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('username', username, sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('password', password, sdn_const.GROUP_OPT)
+                    password='123456'):
+        self.conf_fixture = self.useFixture(fixture_config.Config())
+        self.conf = self.conf_fixture.conf
+        self.conf.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
+        self.conf.set_override('mechanism_drivers',
+                               ['logger', MECHANISM_DRIVER_NAME],
+                               'ml2')
+        self.conf.set_override('url', url, sdn_const.GROUP_OPT)
+        self.conf.set_override('username', username, sdn_const.GROUP_OPT)
+        self.conf.set_override('password', password, sdn_const.GROUP_OPT)
 
     def _test_missing_config(self, **kwargs):
         self._set_config(**kwargs)
-        self.assertRaises(config.cfg.RequiredOptError,
+        self.assertRaises(cfg.RequiredOptError,
                           plugin.Ml2Plugin)
 
     def test_valid_config(self):
@@ -279,23 +289,23 @@ class SdnDriverTestCase(SdnConfigBase):
             login_args = mock.call(
                 sdn_const.POST, mock.ANY,
                 headers=sdn_const.LOGIN_HTTP_HEADER,
-                data=mock.ANY, timeout=config.cfg.CONF.sdn.timeout)
+                data=mock.ANY, timeout=cfg.CONF.sdn.timeout)
             job_get_args = mock.call(
                 sdn_const.GET, data=None,
                 headers=sdn_const.JSON_HTTP_HEADER,
-                url=urlpath, timeout=config.cfg.CONF.sdn.timeout)
+                url=urlpath, timeout=cfg.CONF.sdn.timeout)
             if status_code < 400:
                 if expected_calls:
                     operation_args = mock.call(
                         headers=sdn_const.JSON_HTTP_HEADER,
-                        timeout=config.cfg.CONF.sdn.timeout, *args, **kwargs)
+                        timeout=cfg.CONF.sdn.timeout, *args, **kwargs)
                     if expected_calls == 4:
                         urlpath2 = sdn_utils.strings_to_url(
                             cfg.CONF.sdn.url, job_url2)
                         job_get_args2 = mock.call(
                             sdn_const.GET, data=None,
                             headers=sdn_const.JSON_HTTP_HEADER,
-                            url=urlpath2, timeout=config.cfg.CONF.sdn.timeout)
+                            url=urlpath2, timeout=cfg.CONF.sdn.timeout)
                         self.assertEqual(
                             login_args, mock_method.mock_calls[4])
                         self.assertEqual(
@@ -355,8 +365,8 @@ class SdnDriverTestCase(SdnConfigBase):
             context = self._get_mock_operation_context(object_type)
 
         url_object_type = object_type.replace('_', '-')
-        url = '%s/%s/%s' % (config.cfg.CONF.sdn.url,
-                            config.cfg.CONF.sdn.domain,
+        url = '%s/%s/%s' % (cfg.CONF.sdn.url,
+                            cfg.CONF.sdn.domain,
                             url_object_type)
         if operation in (sdn_const.PUT, sdn_const.DELETE):
             uuid = context.current['id']

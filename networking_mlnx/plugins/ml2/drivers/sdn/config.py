@@ -30,7 +30,8 @@ sdn_opts = [
                    ),
         cfg.StrOpt('password',
                    help=_("HTTP password for authentication."),
-                   secret=True
+                   secret=True,
+                   default='123456'
                    ),
         cfg.IntOpt('timeout',
                    help=_("HTTP timeout in seconds."),
