@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from neutron.extensions import portbindings
 from neutron.plugins.ml2 import driver_api as api
 from neutron.tests.unit.plugins.ml2 import _test_mech_agent as base
+from neutron_lib.api.definitions import portbindings
 
 from networking_mlnx.plugins.ml2.drivers.mlnx import mech_mlnx
 
