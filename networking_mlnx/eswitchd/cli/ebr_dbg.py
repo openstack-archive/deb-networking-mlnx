@@ -57,12 +57,12 @@ def main():
         try:
             result = client.get_tables(fabric)
             for fabric, tables in result.items():
-                print ("FABRIC = %s" % fabric)
-                print ("========================")
+                print("FABRIC = %s" % fabric)
+                print("========================")
                 for table, data in tables.items():
-                    print ("TABLE: %s" % table)
+                    print("TABLE: %s" % table)
                     pprint_table(sys.stdout, data)
-                    print ("========================")
+                    print("========================")
         except exceptions.MlxException as e:
             sys.stderr.write("Error in get-tables command")
             sys.stderr.write(e.message)
