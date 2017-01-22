@@ -58,7 +58,6 @@ def check_for_older_ops(session, row):
     q = session.query(sdn_journal_db.SdnJournal).filter(
         or_(sdn_journal_db.SdnJournal.state == sdn_const.PENDING,
             sdn_journal_db.SdnJournal.state == sdn_const.PROCESSING),
-        sdn_journal_db.SdnJournal.operation == row.operation,
         sdn_journal_db.SdnJournal.object_uuid == row.object_uuid,
         sdn_journal_db.SdnJournal.created_at < row.created_at,
         sdn_journal_db.SdnJournal.id != row.id)

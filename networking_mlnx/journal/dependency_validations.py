@@ -19,14 +19,9 @@ from networking_mlnx.db import db
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 
-def _is_valid_update_operation(session, row):
+def _is_valid_operation(session, row):
     # Check if there are older updates in the queue
     if db.check_for_older_ops(session, row):
-        return False
-
-    # Check for a pending or processing create operation on this uuid
-    if db.check_for_pending_or_processing_ops(
-            session, row.object_uuid, sdn_const.POST):
         return False
     return True
 
@@ -48,7 +43,7 @@ def validate_network_operation(session, row):
             session, sdn_const.PORT, row.object_uuid):
             return False
     elif (row.operation == sdn_const.PUT and
-            not _is_valid_update_operation(session, row)):
+            not _is_valid_operation(session, row)):
         return False
     return True
 
@@ -67,18 +62,7 @@ def validate_port_operation(session, row):
             session, network_id, [sdn_const.POST])
         if ops:
             return False
-        if (row.operation == sdn_const.PUT and
-                not _is_valid_update_operation(session, row)):
-            return False
-    elif row.operation == sdn_const.DELETE:
-        # Check for any pending or processing create or update
-        # ops on this uuid itself
-        if db.check_for_pending_or_processing_ops(
-            session, row.object_uuid, [sdn_const.PUT,
-                                       sdn_const.POST]):
-            return False
-
-    return True
+    return _is_valid_operation(session, row)
 
 
 _VALIDATION_MAP = {
