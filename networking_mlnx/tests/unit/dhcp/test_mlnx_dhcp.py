@@ -92,6 +92,48 @@ class TestMlnxDnsmasq(test_dhcp.TestDnsmasq):
                 exp_addn_name, exp_addn_data)
 
     @property
+    def _test_no_dns_domain_alloc_data(self):
+        exp_host_name = '/dhcp/cccccccc-cccc-cccc-cccc-cccccccccccc/host'
+        exp_host_data = ('00:00:80:aa:bb:cc,'
+                         'id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:00:80:00:'
+                         '00:aa:bb:cc,host-192-168-0-2,'
+                         '192.168.0.2\n'
+                         '00:00:f3:aa:bb:cc,'
+                         'id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:00:f3:00:'
+                         '00:aa:bb:cc,host-fdca-3ba5-a17a-4ba3--2,'
+                         '[fdca:3ba5:a17a:4ba3::2]\n'
+                         '00:00:0f:aa:bb:cc,'
+                         'id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:00:0f:00:'
+                         '00:aa:bb:cc,host-192-168-0-3,'
+                         '192.168.0.3\n'
+                         '00:00:0f:aa:bb:cc,'
+                         'id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:00:0f:00:'
+                         '00:aa:bb:cc,host-fdca-3ba5-a17a-4ba3--3,'
+                         '[fdca:3ba5:a17a:4ba3::3]\n'
+                         '00:00:0f:rr:rr:rr,'
+                         'id:ff:00:00:00:00:00:02:00:00:02:c9:00:00:00:0f:00:'
+                         '00:rr:rr:rr,host-192-168-0-1,'
+                         '192.168.0.1\n').lstrip()
+        exp_addn_name = '/dhcp/cccccccc-cccc-cccc-cccc-cccccccccccc/addn_hosts'
+        exp_addn_data = (
+            '192.168.0.2\t'
+            'host-192-168-0-2 host-192-168-0-2\n'
+            'fdca:3ba5:a17a:4ba3::2\t'
+            'host-fdca-3ba5-a17a-4ba3--2 '
+            'host-fdca-3ba5-a17a-4ba3--2\n'
+            '192.168.0.3\thost-192-168-0-3 '
+            'host-192-168-0-3\n'
+            'fdca:3ba5:a17a:4ba3::3\t'
+            'host-fdca-3ba5-a17a-4ba3--3 '
+            'host-fdca-3ba5-a17a-4ba3--3\n'
+            '192.168.0.1\t'
+            'host-192-168-0-1 '
+            'host-192-168-0-1\n'
+        ).lstrip()
+        return (exp_host_name, exp_host_data,
+                exp_addn_name, exp_addn_data)
+
+    @property
     def _test_reload_allocation_data(self):
         exp_host_name = '/dhcp/cccccccc-cccc-cccc-cccc-cccccccccccc/host'
         exp_host_data = ('00:00:80:aa:bb:cc,'
