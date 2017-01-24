@@ -16,10 +16,10 @@ import functools
 
 
 from neutron.db import api as db_api
-from neutron.extensions import portbindings
 from neutron.objects.qos import policy as policy_object
 from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api
+from neutron_lib.api.definitions import portbindings
 from neutron_lib import constants as neutron_const
 from oslo_log import log
 
