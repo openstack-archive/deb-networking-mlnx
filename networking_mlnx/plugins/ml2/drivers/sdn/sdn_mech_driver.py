@@ -193,13 +193,15 @@ class SDNMechanismDriver(api.MechanismDriver):
         # delete the port in case instance is deleted
         # and port is created separately
         elif (orig_port_dict[portbindings.HOST_ID] and
-              not port_dic[portbindings.HOST_ID]):
+              not port_dic[portbindings.HOST_ID] and
+              self._is_send_bind_port(orig_port_dict)):
             SDNMechanismDriver._record_in_journal(
                 context, sdn_const.PORT, sdn_const.DELETE, orig_port_dict)
         # delete the port in case instance is migrated to another hypervisor
         elif (orig_port_dict[portbindings.HOST_ID] and
               port_dic[portbindings.HOST_ID] !=
-              orig_port_dict[portbindings.HOST_ID]):
+              orig_port_dict[portbindings.HOST_ID] and
+              self._is_send_bind_port(orig_port_dict)):
             SDNMechanismDriver._record_in_journal(
                 context, sdn_const.PORT, sdn_const.DELETE, orig_port_dict)
         else:
