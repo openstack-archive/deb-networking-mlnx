@@ -48,7 +48,7 @@ class ConnUtil(object):
                     response = self.parse_response_msg(response_msg)
                     return response
             else:
-                print ('no result received')
+                print('no result received')
         finally:
             socket.close()
             context.term()
