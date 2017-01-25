@@ -180,7 +180,7 @@ class SDNMechanismDriver(api.MechanismDriver):
             # Ethernet Case
             link__info = self._get_local_link_information(port_dic)
             orig_link_info = self._get_local_link_information(orig_port_dict)
-            if link__info != orig_link_info:
+            if link__info != orig_link_info and link__info:
                 SDNMechanismDriver._record_in_journal(
                     context, sdn_const.PORT, sdn_const.POST, port_dic)
                 return
