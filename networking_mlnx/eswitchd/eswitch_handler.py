@@ -314,8 +314,16 @@ class eSwitchHandler(object):
             cmd = ['ebrctl', 'write-sys', path, vguid]
             command_utils.execute(*cmd)
 
-        cmd = ['ebrctl', 'write-sys', guid_poliy, 'Up\n']
-        command_utils.execute(*cmd)
+        if vguid == constants.INVALID_GUID_CX4:
+            cmd = ['ebrctl', 'write-sys', guid_poliy, 'Down\n']
+            command_utils.execute(*cmd)
+            cmd = ['ebrctl', 'write-sys', constants.UNBIND_PATH, dev]
+            command_utils.execute(*cmd)
+            cmd = ['ebrctl', 'write-sys', constants.BIND_PATH, dev]
+            command_utils.execute(*cmd)
+        else:
+            cmd = ['ebrctl', 'write-sys', guid_poliy, 'Up\n']
+            command_utils.execute(*cmd)
 
     def _config_vlan_ib(self, fabric, dev, vlan):
         fabric_details = self.rm.get_fabric_details(fabric)
