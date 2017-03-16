@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from neutron.agent.common import config
+from neutron.conf.agent import common as config
 from oslo_config import cfg
 
 from networking_mlnx._i18n import _
