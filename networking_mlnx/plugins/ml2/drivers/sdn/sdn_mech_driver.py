@@ -222,7 +222,10 @@ class SDNMechanismDriver(api.MechanismDriver):
     def delete_port_precommit(self, context):
         port_dic = context.current
         # delete the port only if attached to a host
-        if port_dic[portbindings.HOST_ID]:
+        vnic_type = port_dic[portbindings.VNIC_TYPE]
+        if (port_dic[portbindings.HOST_ID] and
+            (vnic_type == portbindings.VNIC_BAREMETAL or
+             self._is_send_bind_port(port_dic))):
                 port_dic[NETWORK_QOS_POLICY] = (
                     self._get_network_qos_policy(context,
                                                  port_dic['network_id']))
