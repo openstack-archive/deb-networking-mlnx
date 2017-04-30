@@ -38,7 +38,7 @@ class ResourceManager(object):
                                   pf_mlx_dev)
         vfs = self.discover_devices(pf)
         LOG.info(_LI("PF %(pf)s, vfs = %(vf)s"), {'pf': pf, 'vf': vfs})
-        self.device_db.set_fabric_devices(fabric, vfs)
+        self.device_db.set_fabric_devices(fabric, pf, vfs)
 
     def scan_attached_devices(self):
         devices = []
@@ -68,8 +68,8 @@ class ResourceManager(object):
                 vm_ids[dev[0]] = vm_id
         return devices, vm_ids
 
-    def get_fabric_details(self, fabric):
-        return self.device_db.get_fabric_details(fabric)
+    def get_fabric_details(self, fabric, pf=None):
+        return self.device_db.get_fabric_details(fabric, pf)
 
     def discover_devices(self, pf):
         return self.pci_utils.get_vfs_info(pf)
@@ -98,21 +98,25 @@ class ResourceManager(object):
             fabric = self.get_fabric_for_dev(dev)
             if fabric:
                 fabric_details = self.get_fabric_details(fabric)
-                if fabric_details['pf_device_type'] == \
-                   constants.CX3_VF_DEVICE_TYPE:
-                    hca_port = fabric_details['hca_port']
-                    pf_mlx_dev = fabric_details['pf_mlx_dev']
-                    vf_index = self.pci_utils.get_guid_index(pf_mlx_dev, dev,
-                                                             hca_port)
-                elif fabric_details['pf_device_type'] == \
-                    constants.CX4_VF_DEVICE_TYPE:
-                    vf_index = fabric_details['vfs'][dev]['vf_num']
-                try:
-                    mac = self.macs_map[fabric][str(vf_index)]
-                    devs.append((dev, mac, fabric))
-                except KeyError:
-                    LOG.warning(_LW("Failed to retrieve Hostdev MAC"
-                                    "for dev %s"), dev)
+                for pf_fabric_details in fabric_details.values():
+                    if (pf_fabric_details['pf_device_type'] ==
+                        constants.MLNX4_VF_DEVICE_TYPE):
+                        hca_port = pf_fabric_details['hca_port']
+                        pf_mlx_dev = pf_fabric_details['pf_mlx_dev']
+                        vf_index = self.pci_utils.get_guid_index(
+                            pf_mlx_dev, dev, hca_port)
+                    elif (pf_fabric_details['pf_device_type'] ==
+                          constants.MLNX5_VF_DEVICE_TYPE):
+                        if dev in pf_fabric_details['vfs']:
+                            vf_index = pf_fabric_details['vfs'][dev]['vf_num']
+                        else:
+                            continue
+                    try:
+                        mac = self.macs_map[fabric][str(vf_index)]
+                        devs.append((dev, mac, fabric))
+                    except KeyError:
+                        LOG.warning(_LW("Failed to retrieve Hostdev MAC"
+                                        "for dev %s"), dev)
             else:
                 LOG.info(_LI("No Fabric defined for device %s"), hostdev)
         return devs

@@ -404,7 +404,7 @@ def main():
 
     try:
         interface_mappings = q_utils.parse_mappings(
-            cfg.CONF.ESWITCH.physical_interface_mappings)
+            cfg.CONF.ESWITCH.physical_interface_mappings, unique_keys=False)
     except ValueError as e:
         LOG.error(_LE("Parsing physical_interface_mappings failed: %s. "
                       "Agent terminated!"), e)

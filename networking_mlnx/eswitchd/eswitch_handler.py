@@ -67,7 +67,11 @@ class eSwitchHandler(object):
                     sys.exit(1)
 
             if fabric_type:
-                self.eswitches[fabric] = eswitch_db.eSwitchDB()
+                if self.eswitches.get(fabric) is None:
+                    self.eswitches[fabric] = []
+                vfs = self.pci_utils.get_vfs_info(pf)
+                self.eswitches[fabric].append(
+                    eswitch_db.eSwitchDB(pf=pf, vfs=vfs))
                 self._add_fabric(fabric, pf, fabric_type)
                 res_fabrics.append((fabric, pf, fabric_type))
             else:
@@ -88,19 +92,27 @@ class eSwitchHandler(object):
     def _add_fabric(self, fabric, pf, fabric_type):
         self.rm.add_fabric(fabric, pf, fabric_type)
         self._config_port_up(pf)
-        fabric_details = self.rm.get_fabric_details(fabric)
-
-        for vf in fabric_details['vfs']:
-            self.eswitches[fabric].create_port(vf, constants.VIF_TYPE_HOSTDEV)
+        pf_fabric_details = self.rm.get_fabric_details(fabric, pf)
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        eswitch = None
+        for esw in eswitches:
+            if esw.pf == pf:
+                eswitch = esw
+                break
+        for vf in pf_fabric_details['vfs']:
+            eswitch.create_port(vf, constants.VIF_TYPE_HOSTDEV)
 
     def _treat_added_devices(self, devices, vm_ids):
         for device in devices:
             dev, mac, fabric = device
             if fabric:
-                self.eswitches[fabric].attach_vnic(
-                    port_name=dev, device_id=vm_ids[dev], vnic_mac=mac)
-                if self.eswitches[fabric].vnic_exists(mac):
-                    self.eswitches[fabric].plug_nic(port_name=dev)
+                for eswitch in self.eswitches[fabric]:
+                    if dev in eswitch.vfs:
+                        eswitch.attach_vnic(
+                            port_name=dev, device_id=vm_ids[dev], vnic_mac=mac)
+                        if eswitch.vnic_exists(mac):
+                            eswitch.plug_nic(port_name=dev)
+                        break
             else:
                 LOG.info(_LI("No Fabric defined for device %s"), dev)
 
@@ -108,17 +120,20 @@ class eSwitchHandler(object):
         for dev, mac in devices:
             fabric = self.rm.get_fabric_for_dev(dev)
             if fabric:
-                self.eswitches[fabric].detach_vnic(vnic_mac=mac)
+                for eswitch in self.eswitches[fabric]:
+                    if dev in eswitch.vfs:
+                        eswitch.detach_vnic(vnic_mac=mac)
             else:
                 LOG.info(_LI("No Fabric defined for device %s"), dev)
 
     def get_vnics(self, fabrics):
         vnics = {}
         for fabric in fabrics:
-            eswitch = self._get_vswitch_for_fabric(fabric)
-            if eswitch:
-                vnics_for_eswitch = eswitch.get_attached_vnics()
-                vnics.update(vnics_for_eswitch)
+            eswitches = self._get_eswitches_for_fabric(fabric)
+            if eswitches:
+                for eswitch in eswitches:
+                    vnics_for_eswitch = eswitch.get_attached_vnics()
+                    vnics.update(vnics_for_eswitch)
             else:
                 LOG.error(_LE("No eSwitch found for Fabric %s"), fabric)
                 continue
@@ -126,7 +141,7 @@ class eSwitchHandler(object):
         return vnics
 
     def create_port(self, fabric, vnic_type, device_id, vnic_mac, pci_slot):
-        eswitch = self._get_vswitch_for_fabric(fabric)
+        eswitch = self._get_eswitch_for_fabric_and_pci(fabric, pci_slot)
         if eswitch:
             try:
                 if eswitch.attach_vnic(
@@ -143,7 +158,7 @@ class eSwitchHandler(object):
         return pci_slot
 
     def plug_nic(self, fabric, device_id, vnic_mac, pci_slot):
-        eswitch = self._get_vswitch_for_fabric(fabric)
+        eswitch = self._get_eswitch_for_fabric_and_pci(fabric, pci_slot)
         if eswitch:
             eswitch.port_table[pci_slot]['vnic'] = vnic_mac
             eswitch.port_policy.update(
@@ -161,109 +176,129 @@ class eSwitchHandler(object):
 
     def delete_port(self, fabric, vnic_mac):
         dev = None
-        eswitch = self._get_vswitch_for_fabric(fabric)
-        if eswitch:
-            dev = eswitch.detach_vnic(vnic_mac)
-            if dev:
-                self._config_vf_mac_address(fabric, dev)
-        else:
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        for eswitch in eswitches:
+            if eswitch and vnic_mac in eswitch.get_attached_vnics():
+                dev = eswitch.detach_vnic(vnic_mac)
+                if dev:
+                    self._config_vf_mac_address(fabric, dev)
+                    break
+
+        if dev is None:
             LOG.warning(_LW("No eSwitch found for Fabric %s"), fabric)
         return dev
 
     def port_release(self, fabric, vnic_mac):
         ret = None
-        eswitch = self._get_vswitch_for_fabric(fabric)
-        dev = eswitch.get_dev_for_vnic(vnic_mac)
+        dev = None
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        for eswitch in eswitches:
+            if eswitch and vnic_mac in eswitch.get_attached_vnics():
+                dev = eswitch.get_dev_for_vnic(vnic_mac)
+                break
         if dev:
             if (eswitch.get_port_state(dev) ==
                     constants.VPORT_STATE_UNPLUGGED):
                 ret = self.set_vlan(
                     fabric, vnic_mac, constants.UNTAGGED_VLAN_ID)
                 self.port_down(fabric, vnic_mac)
-        eswitch = self._get_vswitch_for_fabric(fabric)
-        eswitch.port_release(vnic_mac)
+            eswitch.port_release(vnic_mac)
         return ret
 
     def port_up(self, fabric, vnic_mac):
-        eswitch = self._get_vswitch_for_fabric(fabric)
-        if eswitch:
-            dev = eswitch.get_dev_for_vnic(vnic_mac)
-            if not dev:
-                LOG.info(_LI("No device for MAC %s"), vnic_mac)
+        dev = None
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        for eswitch in eswitches:
+            if eswitch and vnic_mac in eswitch.get_attached_vnics():
+                dev = eswitch.get_dev_for_vnic(vnic_mac)
+                break
+        if not dev:
+            LOG.info(_LI("No device for MAC %s"), vnic_mac)
 
     def port_down(self, fabric, vnic_mac):
-        eswitch = self._get_vswitch_for_fabric(fabric)
-        if eswitch:
-            dev = eswitch.get_dev_for_vnic(vnic_mac)
-            if dev:
-                LOG.info(_LI("IB port for MAC %s doen't support "
-                         "port down"), vnic_mac)
-            else:
-                LOG.info(_LI("No device for MAC %s"), vnic_mac)
+        dev = None
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        for eswitch in eswitches:
+            if eswitch and vnic_mac in eswitch.get_attached_vnics():
+                dev = eswitch.get_dev_for_vnic(vnic_mac)
+                if dev:
+                    LOG.info(_LI("IB port for MAC %s doen't support "
+                             "port down"), vnic_mac)
+                break
+        if dev is None:
+            LOG.info(_LI("No device for MAC %s"), vnic_mac)
 
     def set_vlan(self, fabric, vnic_mac, vlan):
-        eswitch = self._get_vswitch_for_fabric(fabric)
-        if eswitch:
-            eswitch.set_vlan(vnic_mac, vlan)
-            dev = eswitch.get_dev_for_vnic(vnic_mac)
-            state = eswitch.get_port_state(dev)
-            if dev:
-                if state in (constants.VPORT_STATE_ATTACHED,
-                             constants.VPORT_STATE_UNPLUGGED):
-                    if eswitch.get_port_table()[dev]['alias']:
-                        dev = eswitch.get_port_table()[dev]['alias']
-                    try:
-                        self._config_vlan_ib(fabric, dev, vlan)
-                        return True
-                    except RuntimeError:
-                        LOG.error(_LE('Set VLAN operation failed'))
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        for eswitch in eswitches:
+            if eswitch and vnic_mac in eswitch.get_attached_vnics():
+                eswitch.set_vlan(vnic_mac, vlan)
+                dev = eswitch.get_dev_for_vnic(vnic_mac)
+                state = eswitch.get_port_state(dev)
+                if dev:
+                    if state in (constants.VPORT_STATE_ATTACHED,
+                                 constants.VPORT_STATE_UNPLUGGED):
+                        if eswitch.get_port_table()[dev]['alias']:
+                            dev = eswitch.get_port_table()[dev]['alias']
+                        try:
+                            self._config_vlan_ib(fabric, dev, vlan)
+                            return True
+                        except RuntimeError:
+                            LOG.error(_LE('Set VLAN operation failed'))
         return False
 
     def get_eswitch_tables(self, fabrics):
         tables = {}
         for fabric in fabrics:
-            eswitch = self._get_vswitch_for_fabric(fabric)
-            if eswitch:
-                tables[fabric] = {
-                    'port_table': eswitch.get_port_table_matrix(),
-                    'port_policy': eswitch.get_port_policy_matrix()
-                }
+            eswitches = self._get_eswitches_for_fabric(fabric)
+            for eswitch in eswitches:
+                if eswitch:
+                    tables[fabric] = {
+                        'port_table': eswitch.get_port_table_matrix(),
+                        'port_policy': eswitch.get_port_policy_matrix()
+                    }
             else:
                 LOG.info(_LI("Get eswitch tables: No eswitch %s") % fabric)
         return tables
 
-    def _get_vswitch_for_fabric(self, fabric):
+    def _get_eswitches_for_fabric(self, fabric):
         if fabric in self.eswitches:
             return self.eswitches[fabric]
         else:
             return
 
+    def _get_eswitch_for_fabric_and_pci(self, fabric, pci_slot):
+        eswitches = self._get_eswitches_for_fabric(fabric)
+        for eswitch in eswitches:
+            if pci_slot in eswitch.vfs:
+                return eswitch
+
     def _config_vf_pkey(self, ppkey_idx, pkey_idx,
                         pf_mlx_dev, vf_pci_id, hca_port):
-        path = constants.PKEY_INDEX_PATH % (pf_mlx_dev, vf_pci_id,
-                                            hca_port, pkey_idx)
+        path = constants.MLNX4_PKEY_INDEX_PATH % (pf_mlx_dev, vf_pci_id,
+                                                  hca_port, pkey_idx)
         cmd = ['ebrctl', 'write-sys', path, ppkey_idx]
         command_utils.execute(*cmd)
 
     def _get_guid_idx(self, pf_mlx_dev, dev, hca_port):
-        path = constants.GUID_INDEX_PATH % (pf_mlx_dev, dev, hca_port)
+        path = constants.MLNX4_ADMIN_GUID_PATH % (pf_mlx_dev, dev, hca_port)
         with open(path) as fd:
             idx = fd.readline().strip()
         return idx
 
     def _get_guid_from_mac(self, mac, device_type):
         guid = None
-        if device_type == constants.CX3_VF_DEVICE_TYPE:
+        if device_type == constants.MLNX4_VF_DEVICE_TYPE:
             if mac is None:
-                guid = constants.INVALID_GUID_CX3
+                guid = constants.MLNX4_INVALID_GUID
             else:
                 mac = mac.replace(':', '')
                 prefix = mac[:6]
                 suffix = mac[6:]
                 guid = prefix + '0000' + suffix
-        elif device_type == constants.CX4_VF_DEVICE_TYPE:
+        elif (device_type == constants.MLNX5_VF_DEVICE_TYPE):
             if mac is None:
-                guid = constants.INVALID_GUID_CX4
+                guid = constants.MLNX5_INVALID_GUID
             else:
                 prefix = mac[:9]
                 suffix = mac[9:]
@@ -271,25 +306,26 @@ class eSwitchHandler(object):
         return guid
 
     def _config_vf_mac_address(self, fabric, dev, vnic_mac=None):
-        fabric_details = self.rm.get_fabric_details(fabric)
-        vf_device_type = fabric_details['vfs'][dev]['vf_device_type']
+        pf_fabric_details = self._get_pf_fabric(fabric, dev)
+        vf_device_type = pf_fabric_details['vfs'][dev]['vf_device_type']
         vguid = self._get_guid_from_mac(vnic_mac, vf_device_type)
-        if vf_device_type == constants.CX3_VF_DEVICE_TYPE:
-            self._config_vf_mac_address_cx3(vguid, dev, fabric_details)
-        elif vf_device_type == constants.CX4_VF_DEVICE_TYPE:
-            self._config_vf_mac_address_cx4(vguid, dev, fabric_details)
+        if vf_device_type == constants.MLNX4_VF_DEVICE_TYPE:
+            self._config_vf_mac_address_mlnx4(vguid, dev, pf_fabric_details)
+        elif (vf_device_type == constants.MLNX5_VF_DEVICE_TYPE):
+            self._config_vf_mac_address_mlnx5(vguid, dev, pf_fabric_details)
         else:
             LOG.error(_LE("Unsupported vf device type: %s "),
                       vf_device_type)
 
-    def _config_vf_mac_address_cx3(self, vguid, dev, fabric_details):
-        hca_port = fabric_details['hca_port']
-        pf_mlx_dev = fabric_details['pf_mlx_dev']
+    def _config_vf_mac_address_mlnx4(self, vguid, dev, pf_fabric_details):
+        hca_port = pf_fabric_details['hca_port']
+        pf_mlx_dev = pf_fabric_details['pf_mlx_dev']
         self._config_vf_pkey(
             INVALID_PKEY, DEFAULT_PKEY_IDX, pf_mlx_dev, dev, hca_port)
 
         guid_idx = self._get_guid_idx(pf_mlx_dev, dev, hca_port)
-        path = constants.ADMIN_GUID_PATH % (pf_mlx_dev, hca_port, guid_idx)
+        path = constants.MLNX4_ADMIN_GUID_PATH % (
+            pf_mlx_dev, hca_port, guid_idx)
         cmd = ['ebrctl', 'write-sys', path, vguid]
         command_utils.execute(*cmd)
         ppkey_idx = self._get_pkey_idx(
@@ -301,20 +337,20 @@ class eSwitchHandler(object):
             LOG.error(_LE("Can't find partial management pkey for"
                           "%(pf)s:%(dev)s"), {'pf': pf_mlx_dev, 'dev': dev})
 
-    def _config_vf_mac_address_cx4(self, vguid, dev, fabric_details):
-        vf_num = fabric_details['vfs'][dev]['vf_num']
-        pf_mlx_dev = fabric_details['pf_mlx_dev']
-        guid_node = constants.CX4_GUID_NODE_PATH % {'module': pf_mlx_dev,
-                                                    'vf_num': vf_num}
-        guid_port = constants.CX4_GUID_PORT_PATH % {'module': pf_mlx_dev,
-                                                    'vf_num': vf_num}
-        guid_poliy = constants.CX4_GUID_POLICY_PATH % {'module': pf_mlx_dev,
-                                                       'vf_num': vf_num}
+    def _config_vf_mac_address_mlnx5(self, vguid, dev, pf_fabric_details):
+        vf_num = pf_fabric_details['vfs'][dev]['vf_num']
+        pf_mlx_dev = pf_fabric_details['pf_mlx_dev']
+        guid_node = constants.MLNX5_GUID_NODE_PATH % {'module': pf_mlx_dev,
+                                                      'vf_num': vf_num}
+        guid_port = constants.MLNX5_GUID_PORT_PATH % {'module': pf_mlx_dev,
+                                                      'vf_num': vf_num}
+        guid_poliy = constants.MLNX5_GUID_POLICY_PATH % {'module': pf_mlx_dev,
+                                                         'vf_num': vf_num}
         for path in (guid_node, guid_port):
             cmd = ['ebrctl', 'write-sys', path, vguid]
             command_utils.execute(*cmd)
 
-        if vguid == constants.INVALID_GUID_CX4:
+        if vguid == constants.MLNX5_INVALID_GUID:
             cmd = ['ebrctl', 'write-sys', guid_poliy, 'Down\n']
             command_utils.execute(*cmd)
             cmd = ['ebrctl', 'write-sys', constants.UNBIND_PATH, dev]
@@ -326,19 +362,19 @@ class eSwitchHandler(object):
             command_utils.execute(*cmd)
 
     def _config_vlan_ib(self, fabric, dev, vlan):
-        fabric_details = self.rm.get_fabric_details(fabric)
-        hca_port = fabric_details['hca_port']
-        pf_mlx_dev = fabric_details['pf_mlx_dev']
-        vf_device_type = fabric_details['vfs'][dev]['vf_device_type']
-        if vf_device_type == constants.CX3_VF_DEVICE_TYPE:
-            self._config_vlan_ib_cx3(vlan, pf_mlx_dev, dev, hca_port)
-        elif vf_device_type == constants.CX4_VF_DEVICE_TYPE:
+        pf_fabric_details = self._get_pf_fabric(fabric, dev)
+        hca_port = pf_fabric_details['hca_port']
+        pf_mlx_dev = pf_fabric_details['pf_mlx_dev']
+        vf_device_type = pf_fabric_details['vfs'][dev]['vf_device_type']
+        if vf_device_type == constants.MLNX4_VF_DEVICE_TYPE:
+            self._config_vlan_ib_mlnx4(vlan, pf_mlx_dev, dev, hca_port)
+        elif vf_device_type == constants.MLNX5_VF_DEVICE_TYPE:
             pass
         else:
             LOG.error(_LE("Unsupported vf device type: %s "),
                       vf_device_type)
 
-    def _config_vlan_ib_cx3(self, vlan, pf_mlx_dev, dev, hca_port):
+    def _config_vlan_ib_mlnx4(self, vlan, pf_mlx_dev, dev, hca_port):
         if vlan == 0:
             ppkey_idx = self._get_pkey_idx(
                 int(DEFAULT_PKEY, 16), pf_mlx_dev, hca_port)
@@ -370,3 +406,9 @@ class eSwitchHandler(object):
     def _config_port_up(self, dev):
         cmd = ['ip', 'link', 'set', dev, 'up']
         command_utils.execute(*cmd)
+
+    def _get_pf_fabric(self, fabric, dev):
+        fabric_details = self.rm.get_fabric_details(fabric)
+        for pf_fabric in fabric_details.values():
+            if dev in pf_fabric['vfs']:
+                return pf_fabric
