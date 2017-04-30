@@ -79,12 +79,13 @@ class pciUtils(object):
             with open(device_type_file, 'r') as fd:
                 device_type = fd.read()
                 device_type = device_type.strip(os.linesep)
-                if device_type in constants.CX3_VF_DEVICE_TYPE_LIST:
-                    device_vf_type = constants.CX3_VF_DEVICE_TYPE
-                elif device_type in constants.CX4_VF_DEVICE_TYPE_LIST:
-                    device_vf_type = constants.CX4_VF_DEVICE_TYPE
-                elif device_type in constants.CX5_VF_DEVICE_TYPE_LIST:
-                    device_vf_type = constants.CX5_VF_DEVICE_TYPE
+                if device_type in constants.MLNX4_VF_DEVICE_TYPE_LIST:
+                    device_vf_type = constants.MLNX4_VF_DEVICE_TYPE
+                elif device_type in constants.MLNX5_VF_DEVICE_TYPE_LIST:
+                    device_vf_type = constants.MLNX5_VF_DEVICE_TYPE
+                else:
+                    raise Exception(_LE('device type %s is not '
+                                        'supported'), device_type)
         except IOError:
             pass
         return device_vf_type
@@ -170,7 +171,7 @@ class pciUtils(object):
 
     def get_guid_index(self, pf_mlx_dev, dev, hca_port):
         guid_index = None
-        path = constants.GUID_INDEX_PATH % (pf_mlx_dev, dev, hca_port)
+        path = constants.MLNX4_GUID_INDEX_PATH % (pf_mlx_dev, dev, hca_port)
         with open(path) as fd:
             guid_index = fd.readline().strip()
         return guid_index
@@ -185,23 +186,28 @@ class pciUtils(object):
             return
 
     def get_vfs_macs_ib(self, fabric_details):
-        if fabric_details['pf_device_type'] == constants.CX3_VF_DEVICE_TYPE:
-            return self.get_vfs_macs_ib_cx3(fabric_details)
-        elif fabric_details['pf_device_type'] == constants.CX4_VF_DEVICE_TYPE:
-            return self.get_vfs_macs_ib_cx4(fabric_details)
+        macs_map = {}
+        for pf_fabric_details in fabric_details.values():
+            if (pf_fabric_details['pf_device_type'] ==
+                constants.MLNX4_VF_DEVICE_TYPE):
+                macs_map.update(self.get_vfs_macs_ib_mlnx4(pf_fabric_details))
+            elif (pf_fabric_details['pf_device_type'] ==
+                  constants.MLNX5_VF_DEVICE_TYPE):
+                macs_map.update(self.get_vfs_macs_ib_mlnx5(pf_fabric_details))
+        return macs_map
 
-    def get_vfs_macs_ib_cx3(self, fabric_details):
+    def get_vfs_macs_ib_mlnx4(self, fabric_details):
         hca_port = fabric_details['hca_port']
         pf_mlx_dev = fabric_details['pf_mlx_dev']
         macs_map = {}
-        guids_path = constants.ADMIN_GUID_PATH % (pf_mlx_dev, hca_port,
+        guids_path = constants.MLNX4_ADMIN_GUID_PATH % (pf_mlx_dev, hca_port,
                                                   '[1-9]*')
         paths = glob.glob(guids_path)
         for path in paths:
             vf_index = path.split('/')[-1]
             with open(path) as f:
                 guid = f.readline().strip()
-                if guid == constants.INVALID_GUID_CX3:
+                if guid == constants.MLNX4_INVALID_GUID:
                     mac = constants.INVALID_MAC
                 else:
                     head = guid[:6]
@@ -210,14 +216,15 @@ class pciUtils(object):
                 macs_map[str(int(vf_index))] = mac
         return macs_map
 
-    def get_vfs_macs_ib_cx4(self, fabric_details):
+    def get_vfs_macs_ib_mlnx5(self, fabric_details):
         vfs = fabric_details['vfs']
         macs_map = {}
         for vf in vfs.values():
             vf_num = vf['vf_num']
             pf_mlx_dev = fabric_details['pf_mlx_dev']
-            guid_path = constants.CX4_GUID_NODE_PATH % {'module': pf_mlx_dev,
-                                                        'vf_num': vf_num}
+            guid_path = (
+                constants.MLNX5_GUID_NODE_PATH % {'module': pf_mlx_dev,
+                                                  'vf_num': vf_num})
             with open(guid_path) as f:
                 guid = f.readline().strip()
                 head = guid[:8]

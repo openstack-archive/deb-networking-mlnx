@@ -26,25 +26,31 @@ class DeviceDB(object):
 
     def add_fabric(self, fabric, pf, pci_id, hca_port, fabric_type,
                    pf_mlx_dev):
-        details = {}
-        details['vfs'] = {}
-        details['pf'] = pf
-        details['pf_device_type'] = None
-        details['pci_id'] = pci_id
-        details['hca_port'] = hca_port
-        details['fabric_type'] = fabric_type
-        details['pf_mlx_dev'] = pf_mlx_dev
-        self.device_db[fabric] = details
+        pf_details = {}
+        pf_details['vfs'] = {}
+        pf_details['pf_device_type'] = None
+        pf_details['pci_id'] = pci_id
+        pf_details['hca_port'] = hca_port
+        pf_details['fabric_type'] = fabric_type
+        pf_details['pf_mlx_dev'] = pf_mlx_dev
+        if self.device_db.get(fabric) is None:
+            self.device_db[fabric] = {pf: pf_details}
+        else:
+            self.device_db[fabric][pf] = pf_details
 
-    def get_fabric_details(self, fabric):
-        return self.device_db[fabric]
+    def get_fabric_details(self, fabric, pf=None):
+        if pf is None:
+            return self.device_db[fabric]
+        else:
+            return self.device_db[fabric][pf]
 
-    def set_fabric_devices(self, fabric, vfs):
-        self.device_db[fabric]['vfs'] = vfs
+    def set_fabric_devices(self, fabric, pf, vfs):
+        self.device_db[fabric][pf]['vfs'] = vfs
         vf = six.next(six.itervalues(vfs))
-        self.device_db[fabric]['pf_device_type'] = vf['vf_device_type']
+        self.device_db[fabric][pf]['pf_device_type'] = vf['vf_device_type']
 
     def get_dev_fabric(self, dev):
         for fabric in self.device_db:
-            if dev in self.device_db[fabric]['vfs']:
-                return fabric
+            for pf in self.device_db[fabric]:
+                if dev in self.device_db[fabric][pf]['vfs']:
+                    return fabric
