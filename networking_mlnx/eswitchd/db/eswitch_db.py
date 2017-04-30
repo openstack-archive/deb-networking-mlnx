@@ -23,9 +23,11 @@ LOG = logging.getLogger(__name__)
 
 class eSwitchDB(object):
 
-    def __init__(self):
+    def __init__(self, pf, vfs):
         self.port_table = {}
         self.port_policy = {}
+        self.vfs = vfs
+        self.pf = pf
 
     def create_port(self, port_name, port_type):
         self.port_table.update({port_name: {'type': port_type,
