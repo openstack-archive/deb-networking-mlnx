@@ -15,6 +15,7 @@
 from oslo_config import cfg
 
 from networking_mlnx._i18n import _
+from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 sdn_opts = [
         cfg.StrOpt('url',
@@ -55,4 +56,9 @@ sdn_opts = [
         cfg.IntOpt('processing_timeout', default='100',
                    help=_("Time in seconds to wait before a "
                           "processing row is marked back to pending.")),
+        cfg.ListOpt('physical_networks',
+                default=sdn_const.ANY,
+                help=_("Comma-separated list of <physical_network> "
+                       "that it will send notification. * "
+                       "means all physical_networks")),
 ]

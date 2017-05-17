@@ -21,15 +21,18 @@ from neutron.plugins.common import constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron_lib.api.definitions import portbindings
 from neutron_lib import constants as neutron_const
+from oslo_config import cfg
 from oslo_log import log
 
 from networking_mlnx._i18n import _LE
 from networking_mlnx.journal import cleanup
 from networking_mlnx.journal import journal
 from networking_mlnx.journal import maintenance
+from networking_mlnx.plugins.ml2.drivers.sdn import config
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 
 LOG = log.getLogger(__name__)
+cfg.CONF.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
 
 NETWORK_QOS_POLICY = 'network_qos_policy'
 
@@ -41,9 +44,9 @@ def context_validator(context_type=None):
             if context_type == sdn_const.PORT:
                 # port context contain network_context
                 # which include the segments
-                segments = getattr(context._network_context, "_segments", None)
+                segments = getattr(context.network, "network_segments", None)
             elif context_type == sdn_const.NETWORK:
-                segments = getattr(context, "_segments", None)
+                segments = getattr(context, "network_segments", None)
             else:
                 segments = getattr(context, "segments_to_bind", None)
             if segments and getattr(instance, "check_segments", None):
@@ -83,6 +86,20 @@ class SDNMechanismDriver(api.MechanismDriver):
             [constants.TYPE_VLAN, constants.TYPE_FLAT])
         self.vif_type = portbindings.VIF_TYPE_OTHER
         self.vif_details = {}
+        self.allowed_physical_networks = cfg.CONF.sdn.physical_networks
+
+    def _is_allowed_physical_network(self, physical_network):
+        if (sdn_const.ANY in self.allowed_physical_networks or
+            physical_network in self.allowed_physical_networks):
+            return True
+        return False
+
+    def _is_allowed_physical_networks(self, network_context):
+        for network_segment in network_context.network_segments:
+            physical_network = network_segment.get('physical_network')
+            if not self._is_allowed_physical_network(physical_network):
+                return False
+        return True
 
     def _start_maintenance_thread(self):
         # start the maintenance thread and register all the maintenance
@@ -108,7 +125,8 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def create_network_precommit(self, context):
         network_dic = context.current
-        if network_dic.get('provider:segmentation_id'):
+        if (self._is_allowed_physical_networks(context) and
+            network_dic.get('provider:segmentation_id')):
             network_dic[NETWORK_QOS_POLICY] = (
                 self._get_network_qos_policy(context, network_dic['id']))
             SDNMechanismDriver._record_in_journal(
@@ -118,7 +136,8 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def bind_port(self, context):
         port_dic = context.current
-        if self._is_send_bind_port(port_dic):
+        if (self._is_allowed_physical_networks(context.network) and
+            self._is_send_bind_port(port_dic)):
             port_dic[NETWORK_QOS_POLICY] = (
                 self._get_network_qos_policy(context, port_dic['network_id']))
             SDNMechanismDriver._record_in_journal(
@@ -138,10 +157,11 @@ class SDNMechanismDriver(api.MechanismDriver):
     @error_handler
     def update_network_precommit(self, context):
         network_dic = context.current
-        network_dic[NETWORK_QOS_POLICY] = (
-            self._get_network_qos_policy(context, network_dic['id']))
-        SDNMechanismDriver._record_in_journal(
-            context, sdn_const.NETWORK, sdn_const.PUT, network_dic)
+        if (self._is_allowed_physical_networks(context)):
+            network_dic[NETWORK_QOS_POLICY] = (
+                self._get_network_qos_policy(context, network_dic['id']))
+            SDNMechanismDriver._record_in_journal(
+                context, sdn_const.NETWORK, sdn_const.PUT, network_dic)
 
     def _get_client_id_from_port(self, port):
         dhcp_opts = port.get('extra_dhcp_opts', [])
@@ -156,6 +176,8 @@ class SDNMechanismDriver(api.MechanismDriver):
             return binding_profile.get('local_link_information')
 
     def create_port_precommit(self, context):
+        if not self._is_allowed_physical_networks(context.network):
+            return
         port_dic = context.current
         port_dic[NETWORK_QOS_POLICY] = (
             self._get_network_qos_policy(context, port_dic['network_id']))
@@ -168,6 +190,8 @@ class SDNMechanismDriver(api.MechanismDriver):
                 context, sdn_const.PORT, sdn_const.POST, port_dic)
 
     def update_port_precommit(self, context):
+        if not self._is_allowed_physical_networks(context.network):
+            return
         port_dic = context.current
         orig_port_dict = context.original
         port_dic[NETWORK_QOS_POLICY] = (
@@ -211,6 +235,8 @@ class SDNMechanismDriver(api.MechanismDriver):
     @context_validator(sdn_const.NETWORK)
     @error_handler
     def delete_network_precommit(self, context):
+        if not self._is_allowed_physical_networks(context):
+            return
         network_dic = context.current
         network_dic[NETWORK_QOS_POLICY] = (
             self._get_network_qos_policy(context, network_dic['id']))
@@ -220,6 +246,8 @@ class SDNMechanismDriver(api.MechanismDriver):
     @context_validator(sdn_const.PORT)
     @error_handler
     def delete_port_precommit(self, context):
+        if not self._is_allowed_physical_networks(context.network):
+            return
         port_dic = context.current
         # delete the port only if attached to a host
         vnic_type = port_dic[portbindings.VNIC_TYPE]
