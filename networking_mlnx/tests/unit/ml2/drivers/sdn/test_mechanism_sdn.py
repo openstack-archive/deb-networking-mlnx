@@ -164,7 +164,8 @@ class SdnDriverTestCase(SdnConfigBase):
                    'provider:network_type': 'vlan',
                    'network_qos_policy': None}
         context = mock.Mock(current=current, _network=current,
-                            _segments=self._get_segments_list())
+                            _segments=self._get_segments_list(),
+                            network_segments=self._get_segments_list())
         context._plugin_context.session = neutron_db_api.get_session()
         return context
 
@@ -195,11 +196,11 @@ class SdnDriverTestCase(SdnConfigBase):
         # The port context should have NetwrokContext object that contain
         # the segments list
         network_context = type('NetworkContext', (object,),
-                            {"_segments": self._get_segments_list()})
+                            {"network_segments": self._get_segments_list()})
 
         context = mock.Mock(current=current, _port=current,
                             original=original,
-                            _network_context=network_context)
+                            network=network_context)
         context._plugin_context.session = neutron_db_api.get_session()
         return context
 
@@ -215,8 +216,13 @@ class SdnDriverTestCase(SdnConfigBase):
                    'device_owner': DEVICE_OWNER_COMPUTE,
                    'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
                    'network_qos_policy': None}
+        # The port context should have NetwrokContext object that contain
+        # the segments list
+        network_context = type('NetworkContext', (object,),
+                            {"network_segments": self._get_segments_list()})
         context = mock.Mock(current=current, _port=current,
-                            segments_to_bind=self._get_segments_list())
+                            segments_to_bind=self._get_segments_list(),
+                            network=network_context)
         context._plugin_context.session = neutron_db_api.get_session()
         return context
 
@@ -497,7 +503,7 @@ class SdnDriverTestCase(SdnConfigBase):
         self._test_parent_delete_pending_child_delete(
             sdn_const.NETWORK, sdn_const.PORT)
 
-    def test_port1(self):
+    def test_port(self):
         self._test_object_type(sdn_const.PORT)
 
     def test_port_update_pending_port_create(self):
@@ -564,3 +570,24 @@ class SdnDriverTestCase(SdnConfigBase):
         # first row should be set back to 'pending' because it was not valid
         rows = db.get_all_db_rows_by_state(self.db_session, sdn_const.PENDING)
         self.assertEqual(3, len(rows))
+
+    def test_network_filter_phynset(self):
+        self.conf.set_override(
+            'physical_networks', 'datacenter', sdn_const.GROUP_OPT)
+        self.mech = sdn_mech_driver.SDNMechanismDriver()
+        self.mech.initialize()
+        self._test_filtered_object_type(sdn_const.NETWORK)
+
+    def test_port_filter_phynset(self):
+        self.conf.set_override(
+            'physical_networks', 'datacenter', sdn_const.GROUP_OPT)
+        self.mech = sdn_mech_driver.SDNMechanismDriver()
+        self.mech.initialize()
+        self._test_filtered_object_type(sdn_const.PORT)
+
+    def _test_filtered_object_type(self, object_type):
+        # Add and process create request.
+        for operation in (sdn_const.POST, sdn_const.PUT, sdn_const.DELETE):
+            self._call_operation_object(operation, object_type)
+            rows = db.get_all_db_rows(self.db_session)
+            self.assertEqual(0, len(rows))
