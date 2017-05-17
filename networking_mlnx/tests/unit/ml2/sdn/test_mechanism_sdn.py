@@ -18,11 +18,11 @@ import requests
 
 from neutron.db import api as neutron_db_api
 from neutron.plugins.common import constants
-from neutron.plugins.ml2 import config
 from neutron.plugins.ml2 import plugin
 from neutron.tests.unit.plugins.ml2 import test_plugin
 from neutron.tests.unit import testlib_api
 from oslo_config import cfg
+from oslo_config import fixture as fixture_config
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 
@@ -30,6 +30,7 @@ from networking_mlnx.db import db
 from networking_mlnx.journal import cleanup
 from networking_mlnx.journal import journal
 from networking_mlnx.plugins.ml2.drivers.sdn import client
+from networking_mlnx.plugins.ml2.drivers.sdn import config
 from networking_mlnx.plugins.ml2.drivers.sdn import constants as sdn_const
 from networking_mlnx.plugins.ml2.drivers.sdn import sdn_mech_driver
 from networking_mlnx.plugins.ml2.drivers.sdn import utils as sdn_utils
@@ -44,13 +45,15 @@ class SdnConfigBase(test_plugin.Ml2PluginV2TestCase):
 
     def setUp(self):
         super(SdnConfigBase, self).setUp()
-        config.cfg.CONF.set_override('mechanism_drivers',
-                                     ['logger', MECHANISM_DRIVER_NAME],
-                                     'ml2')
-        config.cfg.CONF.set_override('url', 'http://127.0.0.1/neo',
-                                     sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('username', 'admin', sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('password', 'admin', sdn_const.GROUP_OPT)
+        self.conf_fixture = self.useFixture(fixture_config.Config())
+        self.conf = self.conf_fixture.conf
+        self.conf.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
+        self.conf.set_override('mechanism_drivers',
+                              ['logger', MECHANISM_DRIVER_NAME],
+                              'ml2')
+        self.conf.set_override('url', 'http://127.0.0.1/neo',
+                               sdn_const.GROUP_OPT)
+        self.conf.set_override('username', 'admin', sdn_const.GROUP_OPT)
 
 
 class SdnTestCase(SdnConfigBase):
@@ -73,12 +76,15 @@ class SdnMechanismConfigTests(testlib_api.SqlTestCase):
     def _set_config(self, url='http://127.0.0.1/neo',
                     username='admin',
                     password='admin'):
-        config.cfg.CONF.set_override('mechanism_drivers',
-                                     ['logger', MECHANISM_DRIVER_NAME],
-                                     'ml2')
-        config.cfg.CONF.set_override('url', url, sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('username', username, sdn_const.GROUP_OPT)
-        config.cfg.CONF.set_override('password', password, sdn_const.GROUP_OPT)
+        self.conf_fixture = self.useFixture(fixture_config.Config())
+        self.conf = self.conf_fixture.conf
+        self.conf.register_opts(config.sdn_opts, sdn_const.GROUP_OPT)
+        self.conf.set_override('mechanism_drivers',
+                               ['logger', MECHANISM_DRIVER_NAME],
+                               'ml2')
+        self.conf.set_override('url', url, sdn_const.GROUP_OPT)
+        self.conf.set_override('username', username, sdn_const.GROUP_OPT)
+        self.conf.set_override('password', password, sdn_const.GROUP_OPT)
 
     def _test_missing_config(self, **kwargs):
         self._set_config(**kwargs)
@@ -154,7 +160,8 @@ class SdnDriverTestCase(SdnConfigBase):
                    'provider:network_type': 'vlan',
                    'network_qos_policy': None}
         context = mock.Mock(current=current, _network=current,
-                            _segments=self._get_segments_list())
+                            _segments=self._get_segments_list(),
+                            network_segments=self._get_segments_list())
         context._plugin_context.session = neutron_db_api.get_session()
         return context
 
@@ -173,10 +180,10 @@ class SdnDriverTestCase(SdnConfigBase):
         # The port context should have NetwrokContext object that contain
         # the segments list
         network_context = type('NetworkContext', (object,),
-                            {"_segments": self._get_segments_list()})
+                            {"network_segments": self._get_segments_list()})
 
         context = mock.Mock(current=current, _port=current,
-                            _network_context=network_context)
+                            network=network_context)
         context._plugin_context.session = neutron_db_api.get_session()
         return context
 
@@ -192,8 +199,13 @@ class SdnDriverTestCase(SdnConfigBase):
                    'device_owner': DEVICE_OWNER_COMPUTE,
                    'network_id': 'c13bba05-eb07-45ba-ace2-765706b2d701',
                    'network_qos_policy': None}
+        # The port context should have NetwrokContext object that contain
+        # the segments list
+        network_context = type('NetworkContext', (object,),
+                            {"network_segments": self._get_segments_list()})
         context = mock.Mock(current=current, _port=current,
-                            segments_to_bind=self._get_segments_list())
+                            segments_to_bind=self._get_segments_list(),
+                            network=network_context)
         context._plugin_context.session = neutron_db_api.get_session()
         return context
 
@@ -474,7 +486,7 @@ class SdnDriverTestCase(SdnConfigBase):
         self._test_parent_delete_pending_child_delete(
             sdn_const.NETWORK, sdn_const.PORT)
 
-    def test_port1(self):
+    def test_port(self):
         self._test_object_type(sdn_const.PORT)
 
     def test_port_update_pending_port_create(self):
@@ -541,3 +553,24 @@ class SdnDriverTestCase(SdnConfigBase):
         # first row should be set back to 'pending' because it was not valid
         rows = db.get_all_db_rows_by_state(self.db_session, sdn_const.PENDING)
         self.assertEqual(3, len(rows))
+
+    def test_network_filter_phynset(self):
+        self.conf.set_override(
+            'physical_networks', 'datacenter', sdn_const.GROUP_OPT)
+        self.mech = sdn_mech_driver.SDNMechanismDriver()
+        self.mech.initialize()
+        self._test_filtered_object_type(sdn_const.NETWORK)
+
+    def test_port_filter_phynset(self):
+        self.conf.set_override(
+            'physical_networks', 'datacenter', sdn_const.GROUP_OPT)
+        self.mech = sdn_mech_driver.SDNMechanismDriver()
+        self.mech.initialize()
+        self._test_filtered_object_type(sdn_const.PORT)
+
+    def _test_filtered_object_type(self, object_type):
+        # Add and process create request.
+        for operation in (sdn_const.POST, sdn_const.PUT, sdn_const.DELETE):
+            self._call_operation_object(operation, object_type)
+            rows = db.get_all_db_rows(self.db_session)
+            self.assertEqual(0, len(rows))

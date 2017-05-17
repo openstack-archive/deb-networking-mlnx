@@ -38,3 +38,6 @@ PROCESSING = 'processing'
 MONITORING = 'monitoring'
 FAILED = 'failed'
 COMPLETED = 'completed'
+
+# Constants for physical_networks option
+ANY = '*'
