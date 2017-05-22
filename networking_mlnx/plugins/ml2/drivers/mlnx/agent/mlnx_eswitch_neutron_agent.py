@@ -21,7 +21,8 @@ import time
 import eventlet
 eventlet.monkey_patch()
 from neutron.agent import rpc as agent_rpc
-from neutron.agent import securitygroups_rpc as sg_rpc
+from neutron.agent import securitygroups_rpc as agent_sg_rpc
+from neutron.api.rpc.handlers import securitygroups_rpc as sg_rpc
 from neutron.common import config as common_config
 from neutron.common import topics
 from neutron.plugins.common import constants as p_const
@@ -197,7 +198,7 @@ class MlnxEswitchNeutronAgent(object):
         self.context = context.get_admin_context_without_session()
         self.plugin_rpc = agent_rpc.PluginApi(topics.PLUGIN)
         self.sg_plugin_rpc = sg_rpc.SecurityGroupServerRpcApi(topics.PLUGIN)
-        self.sg_agent = sg_rpc.SecurityGroupAgentRpc(self.context,
+        self.sg_agent = agent_sg_rpc.SecurityGroupAgentRpc(self.context,
                 self.sg_plugin_rpc)
         self._setup_rpc()
 
