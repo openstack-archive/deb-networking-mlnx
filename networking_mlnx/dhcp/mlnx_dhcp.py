@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from neutron_lib.api.definitions import extra_dhcp_opt as edo_ext
+
 from neutron.agent.linux import dhcp
-from neutron.extensions import extra_dhcp_opt as edo_ext
 
 
 class DhcpOpt(object):
@@ -38,13 +39,14 @@ class MlnxDnsmasq(dhcp.Dnsmasq):
         return client_id
 
     def _gen_client_id_opt(self, client_id):
-        return DhcpOpt(opt_name=edo_ext.CLIENT_ID, opt_value=client_id)
+        return DhcpOpt(opt_name=edo_ext.DHCP_OPT_CLIENT_ID,
+                       opt_value=client_id)
 
     def _get_port_extra_dhcp_opts(self, port):
         client_id = self._gen_client_id(port)
         if hasattr(port, edo_ext.EXTRADHCPOPTS):
             for opt in port.extra_dhcp_opts:
-                if opt.opt_name == edo_ext.CLIENT_ID:
+                if opt.opt_name == edo_ext.DHCP_OPT_CLIENT_ID:
                     opt.opt_value = client_id
                     return port.extra_dhcp_opts
             port.extra_dhcp_opts.append(self._gen_client_id_opt(client_id))
