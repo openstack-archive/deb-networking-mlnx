@@ -38,14 +38,14 @@ function install_eswitchd {
 function configure_eswitchd {
     # setting up configuration
     sudo install -d -o $STACK_USER -m 755 $ESWITCHD_CONF_DIR
-    sudo cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_DIR/* $ESWITCHD_CONF_DIR
+    sudo cp -r $ESWITCHD_DIR/$ESWITCHD_CONF_FILE $ESWITCHD_CONF_DIR
     sudo cp -r $ESWITCHD_DIR/etc/neutron/rootwrap.d/eswitchd.filters /etc/neutron/rootwrap.d/
 
     # configure nova rootwarp
     Q_NOVA_RR_CONF_FILE=$NOVA_CONF_DIR/rootwrap.conf
     sudo sed -e 's:^exec_dirs=\(.*\)$:exec_dirs=\1,/usr/local/bin:' -i $Q_NOVA_RR_CONF_FILE
-    
-    if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then 
+
+    if [[ -n "$PHYSICAL_INTERFACE_MAPPINGS" ]]; then
         iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "$PHYSICAL_INTERFACE_MAPPINGS"
     else
         iniset /$ESWITCHD_CONF_FILE DAEMON fabrics "${PHYSICAL_NETWORK}:${PHYSICAL_INTERFACE}"
