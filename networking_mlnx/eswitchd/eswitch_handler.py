@@ -20,7 +20,6 @@ from networking_mlnx._i18n import _LE, _LI, _LW
 from oslo_log import log as logging
 
 from networking_mlnx.eswitchd.common import constants
-from networking_mlnx.eswitchd.common import exceptions
 from networking_mlnx.eswitchd.db import eswitch_db
 from networking_mlnx.eswitchd.resource_mngr import ResourceManager
 from networking_mlnx.eswitchd.utils import command_utils
@@ -139,23 +138,6 @@ class eSwitchHandler(object):
                 continue
         LOG.info(_LI("vnics are %s"), vnics)
         return vnics
-
-    def create_port(self, fabric, vnic_type, device_id, vnic_mac, pci_slot):
-        eswitch = self._get_eswitch_for_fabric_and_pci(fabric, pci_slot)
-        if eswitch:
-            try:
-                if eswitch.attach_vnic(
-                        pci_slot, device_id, vnic_mac, pci_slot):
-                    self._config_vf_mac_address(fabric, pci_slot, vnic_mac)
-                else:
-                    raise exceptions.MlxException('Failed to attach vnic')
-            except (RuntimeError, exceptions.MlxException):
-                LOG.error(_LE('Create port operation failed '))
-                pci_slot = None
-        else:
-            LOG.error(_LE("No eSwitch found for Fabric %s"), fabric)
-
-        return pci_slot
 
     def plug_nic(self, fabric, device_id, vnic_mac, pci_slot):
         eswitch = self._get_eswitch_for_fabric_and_pci(fabric, pci_slot)

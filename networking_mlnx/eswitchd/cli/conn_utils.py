@@ -66,22 +66,6 @@ class ConnUtil(object):
             error_msg = "Unknown operation status %s" % msg['status']
         raise exceptions.MlxException(error_msg)
 
-    def allocate_nic(self, vnic_mac, device_id, fabric, vnic_type,
-                     dev_name=None):
-        msg = jsonutils.dumps({'action': 'create_port',
-                          'vnic_mac': vnic_mac,
-                          'device_id': device_id,
-                          'fabric': fabric,
-                          'vnic_type': vnic_type,
-                          'dev_name': dev_name})
-        recv_msg = self.send_msg(msg)
-        try:
-            dev = recv_msg['dev']
-        except Exception:
-            error_msg = "Failed to allocate %s on %s" % (vnic_mac, fabric)
-            raise exceptions.MlxException(error_msg)
-        return dev
-
     def plug_nic(self, vnic_mac, device_id, fabric, vif_type, dev_name):
         msg = jsonutils.dumps({'action': 'plug_nic',
                           'vnic_mac': vnic_mac,

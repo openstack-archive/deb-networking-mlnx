@@ -47,10 +47,6 @@ def parse():
     parser_add_port.add_argument('dev_name')
     parser_add_port.set_defaults(func=add_port)
 
-    parser_add_port = subparsers.add_parser('allocate-port',
-                                            parents=[parent_parser])
-    parser_add_port.set_defaults(func=allocate_port)
-
     parser_del_port = subparsers.add_parser('del-port')
     parser_del_port.set_defaults(func=del_port)
     parser_del_port.add_argument('fabric')
@@ -63,18 +59,6 @@ def parse():
 
     args = parser.parse_args()
     args.func(args)
-
-
-def allocate_port(args):
-    try:
-        dev = client.allocate_nic(args.vnic_mac, args.device_id,
-                                  args.fabric, args.vnic_type)
-    except exceptions.MlxException as e:
-        sys.stderr.write("Error in allocate command")
-        sys.stderr.write(e.message)
-        sys.exit(1)
-    sys.stdout.write(dev)
-    sys.exit(0)
 
 
 def add_port(args):

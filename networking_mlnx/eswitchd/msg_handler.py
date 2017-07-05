@@ -53,28 +53,6 @@ class BasicMessageHandler(object):
         return msg
 
 
-class AttachVnic(BasicMessageHandler):
-    MSG_ATTRS_MANDATORY_MAP = set(['fabric', 'vnic_type',
-                                   'device_id', 'vnic_mac',
-                                   'dev_name'])
-
-    def __init__(self, msg):
-        super(AttachVnic, self).__init__(msg)
-
-    def execute(self, eswitch_handler):
-        fabric = self.msg['fabric']
-        vnic_type = self.msg['vnic_type']
-        device_id = self.msg['device_id']
-        vnic_mac = (self.msg['vnic_mac']).lower()
-        dev_name = self.msg['dev_name']
-        dev = eswitch_handler.create_port(
-            fabric, vnic_type, device_id, vnic_mac, dev_name)
-        if dev:
-            return self.build_response(True, response={'dev': dev})
-        else:
-            return self.build_response(False, reason='Attach vnic failed')
-
-
 class PlugVnic(BasicMessageHandler):
     MSG_ATTRS_MANDATORY_MAP = ('fabric', 'device_id',
                                'vnic_mac', 'dev_name')
@@ -229,8 +207,7 @@ class GetEswitchTables(BasicMessageHandler):
 
 
 class MessageDispatch(object):
-    MSG_MAP = {'create_port': AttachVnic,
-               'delete_port': DetachVnic,
+    MSG_MAP = {'delete_port': DetachVnic,
                'set_vlan': SetVLAN,
                'get_vnics': GetVnics,
                'port_release': PortRelease,
