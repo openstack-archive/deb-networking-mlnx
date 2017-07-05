@@ -14,11 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from neutron.api.v2 import attributes
 from neutron.plugins.common import constants as p_constants
 from neutron.plugins.ml2 import driver_api as api
 from neutron.plugins.ml2.drivers import mech_agent
 from neutron_lib.api.definitions import extra_dhcp_opt as edo_ext
+from neutron_lib.api.definitions import port
 from neutron_lib.api.definitions import portbindings
 from neutron_lib.plugins import directory
 from oslo_config import cfg
@@ -110,7 +110,7 @@ class MlnxMechanismDriver(mech_agent.SimpleAgentMechanismDriverBase):
         plugin._update_extra_dhcp_opts_on_port(
             context._plugin_context,
             updated_port["id"],
-            {attributes.PORT: updated_port})
+            {port.RESOURCE_NAME: updated_port})
 
     def update_port_precommit(self, context):
         if cfg.CONF.MLNX_IB.update_client_id:
