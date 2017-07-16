@@ -58,14 +58,14 @@ function configure_neutron_ml2_mlnx {
             iniset /$Q_PLUGIN_CONF_FILE eswitch physical_interface_mappings $PHYSICAL_INTERFACE_MAPPINGS
         fi
         iniset /$Q_PLUGIN_CONF_FILE securitygroup noop
-        if [[ $UPDATE_CLIENT_ID ]]; then
+        if [[ -n "${UPDATE_CLIENT_ID}" ]]; then
             iniset /$NEUTRON_DCHP_CONF DEFAULT dhcp_broadcast_reply True
         fi
     fi
     if is_service_enabled eswitchd; then
         configure_eswitchd
     fi
-    if is_service_enabled mlnx_dnsmasq && [[ ! $UPDATE_CLIENT_ID ]]; then
+    if is_service_enabled mlnx_dnsmasq && [[ -z "${UPDATE_CLIENT_ID}" ]]; then
         configure_mlnx_dnsmasq
     fi
 }
