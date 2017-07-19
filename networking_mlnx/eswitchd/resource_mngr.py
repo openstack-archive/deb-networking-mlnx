@@ -33,8 +33,8 @@ class ResourceManager(object):
         self.device_db = device_db.DeviceDB()
 
     def add_fabric(self, fabric, pf, fabric_type):
-        pci_id, hca_port, pf_mlx_dev = self._get_pf_details(pf)
-        self.device_db.add_fabric(fabric, pf, pci_id, hca_port, fabric_type,
+        hca_port, pf_mlx_dev = self._get_pf_details(pf)
+        self.device_db.add_fabric(fabric, pf, hca_port, fabric_type,
                                   pf_mlx_dev)
         vfs = self.discover_devices(pf)
         LOG.info(_LI("PF %(pf)s, vfs = %(vf)s"), {'pf': pf, 'vf': vfs})
@@ -123,7 +123,5 @@ class ResourceManager(object):
 
     def _get_pf_details(self, pf):
         hca_port = self.pci_utils.get_eth_port(pf)
-        pci_id = self.pci_utils.get_pf_pci(pf)
-        pf_pci_id = self.pci_utils.get_pf_pci(pf, 'normal')
-        pf_mlx_dev = self.pci_utils.get_pf_mlx_dev(pf_pci_id)
-        return (pci_id, hca_port, pf_mlx_dev)
+        pf_mlx_dev = self.pci_utils.get_pf_mlx_dev(pf)
+        return (hca_port, pf_mlx_dev)
