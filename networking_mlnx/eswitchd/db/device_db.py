@@ -24,13 +24,11 @@ class DeviceDB(object):
     def __init__(self):
         self.device_db = {}
 
-    def add_fabric(self, fabric, pf, hca_port, fabric_type,
-                   pf_mlx_dev):
+    def add_fabric(self, fabric, pf, hca_port, pf_mlx_dev):
         pf_details = {}
         pf_details['vfs'] = {}
         pf_details['pf_device_type'] = None
         pf_details['hca_port'] = hca_port
-        pf_details['fabric_type'] = fabric_type
         pf_details['pf_mlx_dev'] = pf_mlx_dev
         if self.device_db.get(fabric) is None:
             self.device_db[fabric] = {pf: pf_details}

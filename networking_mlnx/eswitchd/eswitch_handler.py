@@ -46,36 +46,24 @@ class eSwitchHandler(object):
             self.add_fabrics(fabrics)
 
     def add_fabrics(self, fabrics):
-        res_fabrics = []
         for fabric, pf in fabrics:
-            fabric_type = None
-
-            if pf in ('autoib', 'autoeth'):
-                fabric_type = pf.strip('auto')
-                pf = self.pci_utils.get_auto_pf(fabric_type)
-            else:
-                fabric_type = self.pci_utils.get_interface_type(pf)
-                verify_vendor_pf = (
-                    self.pci_utils.verify_vendor_pf(pf, constants.VENDOR))
-                if (not verify_vendor_pf or
-                        not self.pci_utils.is_sriov_pf(pf) or
-                        not self.pci_utils.is_ifc_module(pf, fabric_type)):
-                    LOG.error(_LE("PF %s must have Mellanox Vendor ID"
-                              ",SR-IOV and driver module "
-                              "enabled. Terminating!") % pf)
-                    sys.exit(1)
-
-            if fabric_type:
-                if self.eswitches.get(fabric) is None:
-                    self.eswitches[fabric] = []
-                vfs = self.pci_utils.get_vfs_info(pf)
-                self.eswitches[fabric].append(
-                    eswitch_db.eSwitchDB(pf=pf, vfs=vfs))
-                self._add_fabric(fabric, pf, fabric_type)
-                res_fabrics.append((fabric, pf, fabric_type))
-            else:
-                LOG.info(_LI("No fabric type for PF:%s.Terminating!") % pf)
+            verify_vendor_pf = (
+                self.pci_utils.verify_vendor_pf(pf, constants.VENDOR))
+            if (not verify_vendor_pf or
+                    not self.pci_utils.is_sriov_pf(pf) or
+                    not self.pci_utils.is_ifc_module(pf)):
+                LOG.error(_LE("PF %s must have Mellanox Vendor ID"
+                          ",SR-IOV and driver module "
+                          "enabled. Terminating!") % pf)
                 sys.exit(1)
+
+            if self.eswitches.get(fabric) is None:
+                self.eswitches[fabric] = []
+            vfs = self.pci_utils.get_vfs_info(pf)
+            self.eswitches[fabric].append(
+                eswitch_db.eSwitchDB(pf=pf, vfs=vfs))
+            self._add_fabric(fabric, pf)
+
         self.sync_devices()
 
     def sync_devices(self):
@@ -88,8 +76,8 @@ class eSwitchHandler(object):
         self._treat_removed_devices(removed_devs)
         self.devices = set(devices)
 
-    def _add_fabric(self, fabric, pf, fabric_type):
-        self.rm.add_fabric(fabric, pf, fabric_type)
+    def _add_fabric(self, fabric, pf):
+        self.rm.add_fabric(fabric, pf)
         self._config_port_up(pf)
         pf_fabric_details = self.rm.get_fabric_details(fabric, pf)
         eswitches = self._get_eswitches_for_fabric(fabric)

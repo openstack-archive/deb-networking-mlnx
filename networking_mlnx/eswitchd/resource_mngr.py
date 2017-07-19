@@ -32,10 +32,9 @@ class ResourceManager(object):
         self.pci_utils = pci_utils.pciUtils()
         self.device_db = device_db.DeviceDB()
 
-    def add_fabric(self, fabric, pf, fabric_type):
+    def add_fabric(self, fabric, pf):
         hca_port, pf_mlx_dev = self._get_pf_details(pf)
-        self.device_db.add_fabric(fabric, pf, hca_port, fabric_type,
-                                  pf_mlx_dev)
+        self.device_db.add_fabric(fabric, pf, hca_port, pf_mlx_dev)
         vfs = self.discover_devices(pf)
         LOG.info(_LI("PF %(pf)s, vfs = %(vf)s"), {'pf': pf, 'vf': vfs})
         self.device_db.set_fabric_devices(fabric, pf, vfs)

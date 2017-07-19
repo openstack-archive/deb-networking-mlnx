@@ -15,7 +15,6 @@
 import glob
 import os
 import re
-import sys
 
 import ethtool
 from oslo_concurrency import processutils
@@ -113,36 +112,12 @@ class pciUtils(object):
         else:
             return None
 
-    def is_ifc_module(self, ifc, fabric_type):
-        modules = {'eth': 'mlx4_en', 'ib': 'ipoib'}
-        if modules[fabric_type] in ethtool.get_module(ifc):
+    def is_ifc_module(self, ifc):
+        if 'ipoib' in ethtool.get_module(ifc):
             return True
 
-    def filter_ifcs_module(self, ifcs, fabric_type):
-        return [ifc for ifc in ifcs if self.is_ifc_module(ifc, fabric_type)]
-
-    def get_auto_pf(self, fabric_type):
-        def log_error_and_exit(err_msg):
-            LOG.error(err_msg)
-            sys.exit(1)
-
-        mlnx_pfs = [ifc for ifc in ethtool.get_devices()
-                    if self.verify_vendor_pf(ifc)]
-        if not mlnx_pfs:
-            log_error_and_exit("Didn't find any Mellanox devices.")
-
-        mlnx_pfs = [ifc for ifc in mlnx_pfs if self.is_sriov_pf(ifc)]
-        if not mlnx_pfs:
-            log_error_and_exit("Didn't find Mellanox NIC "
-                               "with SR-IOV capabilities.")
-        mlnx_pfs = self.filter_ifcs_module(mlnx_pfs, fabric_type)
-        if not mlnx_pfs:
-            log_error_and_exit("Didn't find Mellanox NIC of type %s with "
-                               "SR-IOV capabilites." % fabric_type)
-        if len(mlnx_pfs) != 1:
-            log_error_and_exit("Found multiple PFs %s. Configure Manually."
-                               % mlnx_pfs)
-        return mlnx_pfs[0]
+    def filter_ifcs_module(self, ifcs):
+        return [ifc for ifc in ifcs if self.is_ifc_module(ifc)]
 
     def get_pf_mlx_dev(self, pf):
         dev_path = (
