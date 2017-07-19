@@ -33,7 +33,7 @@ class pciUtils(object):
     ETH_PATH = "/sys/class/net/%(interface)s"
     ETH_DEV = ETH_PATH + "/device"
     ETH_PORT = ETH_PATH + "/dev_id"
-    PF_MLX_DEV_PATH = "/sys/class/infiniband/*"
+    INFINIBAND_PATH = 'device/infiniband'
     VENDOR_PATH = ETH_DEV + '/vendor'
     DEVICE_TYPE_PATH = ETH_DEV + '/virtfn%(vf_num)s/device'
     _VIRTFN_RE = re.compile("virtfn(?P<vf_num>\d+)")
@@ -144,30 +144,12 @@ class pciUtils(object):
                                % mlnx_pfs)
         return mlnx_pfs[0]
 
-    def get_eth_vf(self, dev):
-        vf_path = pciUtils.ETH_DEV % {'interface': dev}
-        try:
-            device = os.readlink(vf_path)
-            vf = device.split('/')[3]
-            return vf
-        except Exception:
-            return None
-
-    def get_pf_pci(self, pf, type=None):
-        vf = self.get_eth_vf(pf)
-        if vf:
-            if type == 'normal':
-                return vf
-            else:
-                return vf[:-2]
-        return None
-
-    def get_pf_mlx_dev(self, pci_id):
-        paths = glob.glob(pciUtils.PF_MLX_DEV_PATH)
-        for path in paths:
-            id = os.readlink(path).split('/')[5]
-            if pci_id == id:
-                return path.split('/')[-1]
+    def get_pf_mlx_dev(self, pf):
+        dev_path = (
+            os.path.join(pciUtils.ETH_PATH % {'interface': pf},
+            pciUtils.INFINIBAND_PATH))
+        dev_info = os.listdir(dev_path)
+        return dev_info.pop()
 
     def get_guid_index(self, pf_mlx_dev, dev, hca_port):
         guid_index = None

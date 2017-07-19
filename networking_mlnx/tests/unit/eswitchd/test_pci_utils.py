@@ -24,7 +24,6 @@ sys.modules['ethtool'] = mock.Mock()
 
 from networking_mlnx._i18n import _LE
 from networking_mlnx.eswitchd.utils import pci_utils
-from networking_mlnx.eswitchd.utils.pci_utils import pciUtils
 from networking_mlnx.tests import base
 
 if six.PY3:
@@ -134,20 +133,3 @@ class TestPciUtils(base.TestCase):
 
         is_sriov = self.pci_utils.is_sriov_pf(pf)
         self.assertFalse(is_sriov)
-
-    def test_get_eth_vf_invalid(self):
-        pf = "pf_that_does_not_exist"
-        ret_val = self.pci_utils.get_eth_vf(pf)
-        self.assertIsNone(ret_val)
-
-    @mock.patch('networking_mlnx.eswitchd.utils.pci_utils.os.readlink')
-    @mock.patch('networking_mlnx.eswitchd.utils.pci_utils.os')
-    def test_get_pf_pci_type_none(self, mock_os, mock_readlink):
-        inst = pciUtils()
-        mock_readlink.return_value = "../../../0000:81:00.0"
-        assert inst.get_pf_pci("dev") == "0000:81:00"
-
-    def test_get_pf_pci_none(self):
-        pf = "pf_that_does_not_exist"
-        ret_val = self.pci_utils.get_pf_pci(pf)
-        self.assertIsNone(ret_val)
