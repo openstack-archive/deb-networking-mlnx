@@ -1,0 +1,8 @@
+Code-Review+2: Moshe Levi <moshele@mellanox.com>
+Workflow+1: Moshe Levi <moshele@mellanox.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 20 Jul 2017 08:58:44 +0000
+Reviewed-on: https://review.openstack.org/485374
+Project: openstack/deb-networking-mlnx
+Branch: refs/heads/stable/ocata
