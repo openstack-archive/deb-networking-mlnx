@@ -1,7 +1,0 @@
-[run]
-branch = True
-source = networking_mlnx
-omit = networking_mlnx/tests/*,networking_mlnx/openstack/*
-
-[report]
-ignore-errors = True

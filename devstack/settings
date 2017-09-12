@@ -1,3 +1,0 @@
-UPDATE_CLIENT_ID=${UPDATE_CLIENT_ID:-default}
-NEUTRON_DCHP_CONF=/etc/neutron/dhcp_agent.ini
-
